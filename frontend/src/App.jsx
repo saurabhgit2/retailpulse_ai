@@ -1,17 +1,11 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { AuthProvider } from './context/AuthProvider';
+import { AppRoutes } from './routes';
 
-function App() {
-  
-
+/** The root component: app-wide providers, then the routes. */
+export function App() {
   return (
-    <>
-      <div id='Homepage'>RetailPulseAI coming soon</div>
-    </>
-  )
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
 }
-
-export default App

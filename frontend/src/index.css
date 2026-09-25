@@ -1,111 +1,113 @@
+/*
+ * Global styles and design tokens.
+ *
+ * Tailwind CSS v4 is configured in CSS instead of a tailwind.config.js file.
+ * 1. The colour palette lives in plain CSS variables on :root (light) and is
+ *    redefined for dark mode. Components never hard-code colours.
+ * 2. `@theme inline` tells Tailwind to create utility classes from those
+ *    variables: --color-surface becomes bg-surface, text-surface, border-surface…
+ *    "inline" means the utility points at var(--surface), so dark mode works
+ *    automatically when the variable changes.
+ */
+@import 'tailwindcss';
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --ground: #f4f6f5; /* page background: a grey with a slight teal bias */
+  --surface: #ffffff; /* cards, tables, inputs */
+  --surface-2: #eaeeec; /* table headers, subtle fills */
+  --ink: #15201e; /* primary text */
+  --ink-2: #33403d; /* secondary text */
+  --muted: #5d6b68; /* labels, hints */
+  --rule: #d6dcda; /* borders and dividers */
+  --accent: #0d6b63; /* brand teal: primary actions, active nav */
+  --accent-ink: #ffffff; /* text on top of --accent */
+  --accent-soft: #dcefeb;
+  /* Semantic colours are separate from the accent: they carry meaning. */
+  --ok: #2f6b2a;
+  --ok-soft: #e1f0dc;
+  --warn: #9a5a06;
+  --warn-soft: #fbefd9;
+  --crit: #a3322a;
+  --crit-soft: #f8e1de;
+  --info: #2b5a8a;
+  --info-soft: #e0eaf5;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+    --ground: #0e1312;
+    --surface: #151c1a;
+    --surface-2: #1c2523;
+    --ink: #e3ebe8;
+    --ink-2: #c4d0cc;
+    --muted: #93a39f;
+    --rule: #2b3532;
+    --accent: #5cc4b6;
+    --accent-ink: #0e1312;
+    --accent-soft: #173330;
+    --ok: #8fcf86;
+    --ok-soft: #1c3319;
+    --warn: #e3a54a;
+    --warn-soft: #3a2a12;
+    --crit: #ef8a80;
+    --crit-soft: #3d1c19;
+    --info: #8db8e8;
+    --info-soft: #172638;
   }
+}
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+@theme inline {
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-crit: var(--crit);
+  --color-crit-soft: var(--crit-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+}
+
+html {
+  color-scheme: light dark;
 }
 
 body {
   margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+/* One visible focus style for every interactive element (keyboard users). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+/* Numbers in tables line up when every digit has the same width. */
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
 }
