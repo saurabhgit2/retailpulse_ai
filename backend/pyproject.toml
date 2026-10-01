@@ -1,0 +1,20 @@
+[project]
+name = "retailpulse-backend"
+version = "0.3.0"
+description = "RetailPulse AI backend: dataset ingestion, cleaning and analytics API"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, I import order, B bugbear, UP pyupgrade, N naming
+select = ["E", "W", "F", "I", "B", "UP", "N"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "db: needs a PostgreSQL test database (skipped automatically when unavailable)",
+]

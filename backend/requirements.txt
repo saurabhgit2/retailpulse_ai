@@ -1,0 +1,15 @@
+# Runtime dependencies. Versions are pinned with ~= so patch updates are allowed
+# but minor upgrades are a deliberate decision.
+fastapi~=0.116.0
+uvicorn[standard]~=0.35.0
+pydantic~=2.11.0
+email-validator~=2.2.0        # used by Pydantic's EmailStr
+pydantic-settings~=2.10.0
+sqlalchemy~=2.0.41
+alembic~=1.16.0
+psycopg[binary]~=3.2.9
+python-multipart~=0.0.20      # multipart/form-data: file uploads and the login form
+pyjwt~=2.10.1                 # signs and verifies the access token
+argon2-cffi~=25.1.0           # password hashing
+pandas~=2.3.0
+numpy~=2.3.0
