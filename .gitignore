@@ -1,0 +1,31 @@
+# Secrets — never commit these. .env.example is committed; .env is not.
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+coverage/
+.vite/
+
+# Data — the real dataset and uploads stay out of version control
+data/raw/*
+!data/raw/.gitkeep
+data/uploads/*
+!data/uploads/.gitkeep
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

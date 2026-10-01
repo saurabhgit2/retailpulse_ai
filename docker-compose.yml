@@ -1,0 +1,30 @@
+# PostgreSQL for local development. The application itself runs natively
+# (uvicorn / npm run dev) so you can debug it directly; only the database is
+# containerised, which removes "it works on my machine" from the one piece of
+# infrastructure the project depends on.
+#
+#   docker compose up -d db      start the database
+#   docker compose logs -f db    watch it
+#   docker compose down          stop it (data is kept in the named volume)
+#   docker compose down -v       stop it and delete all data
+services:
+  db:
+    image: postgres:16
+    container_name: retailpulse-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: retailpulse
+      POSTGRES_PASSWORD: change-me
+      POSTGRES_DB: retailpulse
+    ports:
+      - '5433:5432'
+    volumes:
+      - retailpulse-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U retailpulse -d retailpulse']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  retailpulse-pgdata:
