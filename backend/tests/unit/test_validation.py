@@ -18,9 +18,12 @@ from app.preprocessing.validation import (
 COLUMNS = ["Invoice", "InvoiceDate", "Quantity", "Price", "StockCode"]
 
 
-def test_non_csv_files_are_refused():
+def test_unsupported_file_types_are_refused():
+    """Excel is accepted now - Online Retail II ships as a workbook - so the
+    boundary is a file type the pipeline genuinely cannot read."""
     with pytest.raises(UnsupportedFile):
-        validate_upload_filename("report.xlsx")
+        validate_upload_filename("report.pdf")
+    assert validate_upload_filename("online_retail_II.xlsx")
 
 
 def test_empty_and_oversized_files_are_refused():

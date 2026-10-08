@@ -24,7 +24,7 @@ from app.db.models.user import User
 from app.db.repositories import datasets as dataset_repo
 from app.preprocessing import validation
 from app.preprocessing.cleaning import PIPELINE_VERSION
-from app.preprocessing.csv_io import CsvReadError, read_csv
+from app.preprocessing.csv_io import EXCEL_SOURCE, CsvReadError, read_table
 from app.preprocessing.field_guide import DEFAULT_CLEANING_OPTIONS
 from app.preprocessing.schema_detection import build_upload_profile
 
@@ -73,17 +73,18 @@ def create_dataset_from_upload(
     dataset_id = uuid.uuid4()
     # The user's filename is shown in the UI but never used as a path, so a name
     # like "..\\..\\evil.csv" cannot escape the upload directory.
-    storage_path = Path(settings.upload_dir) / f"{dataset_id}.csv"
+    suffix = validation.upload_suffix(safe_name)
+    storage_path = Path(settings.upload_dir) / f"{dataset_id}{suffix}"
 
     size, sha256 = _store_upload(stream, storage_path, settings.max_upload_mb)
     validation.validate_upload_size(size, settings.max_upload_mb)
 
     try:
-        preview, encoding = read_csv(storage_path, nrows=settings.preview_rows)
+        preview, encoding = read_table(storage_path, nrows=settings.preview_rows)
     except CsvReadError as error:
         storage_path.unlink(missing_ok=True)
         raise ValidationFailed(
-            f"The file could not be read as CSV: {error}", code="MALFORMED_CSV"
+            f"The file could not be read: {error}", code="MALFORMED_CSV"
         ) from error
 
     try:
@@ -97,7 +98,7 @@ def create_dataset_from_upload(
         rows_examined=len(preview),
         file_truncated=len(preview) >= settings.preview_rows,
     )
-    if encoding != "utf-8":
+    if encoding not in ("utf-8", EXCEL_SOURCE):
         profile["warnings"].append(
             {
                 "code": "ENCODING_FALLBACK",
@@ -145,7 +146,7 @@ def prepare_processing(
     confirmed = validation.validate_mapping(mapping, available)
 
     # Re-read a preview to test the date format against real values.
-    preview, _ = read_csv(
+    preview, _ = read_table(
         Path(dataset.storage_path), columns=[confirmed["occurred_at"]], nrows=5000
     )
     date_format = validation.resolve_date_format(

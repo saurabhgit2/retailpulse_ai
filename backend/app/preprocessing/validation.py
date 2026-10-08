@@ -15,6 +15,7 @@ from typing import Any
 import pandas as pd
 
 from app.core.errors import Conflict, PayloadTooLarge, UnsupportedFile, ValidationFailed
+from app.preprocessing.csv_io import SUPPORTED_SUFFIXES
 from app.preprocessing.dates import DATE_STYLES, parse_rate
 from app.preprocessing.field_guide import (
     FIELD_KEYS,
@@ -26,13 +27,29 @@ DATE_PARSE_THRESHOLD = 0.95
 
 
 def validate_upload_filename(filename: str | None) -> str:
+    """Accept CSV and Excel.
+
+    Excel matters because Online Retail II is distributed as a workbook with one
+    sheet per year; requiring a manual export would be an avoidable obstacle
+    between the user and their own data.
+    """
     if not filename:
         raise ValidationFailed("No file was provided.", code="FILE_REQUIRED")
-    if not filename.lower().endswith(".csv"):
+    if not filename.lower().endswith(SUPPORTED_SUFFIXES):
+        allowed = ", ".join(SUPPORTED_SUFFIXES)
         raise UnsupportedFile(
-            f'"{filename}" is not a CSV file. Export your data as .csv and try again.'
+            f'"{filename}" is not a supported file type. Upload one of: {allowed}.'
         )
     return filename
+
+
+def upload_suffix(filename: str) -> str:
+    """The extension to store the file under, so later reads dispatch correctly."""
+    lowered = filename.lower()
+    for suffix in SUPPORTED_SUFFIXES:
+        if lowered.endswith(suffix):
+            return suffix
+    return ".csv"
 
 
 def validate_upload_size(size_bytes: int, max_mb: int) -> None:
