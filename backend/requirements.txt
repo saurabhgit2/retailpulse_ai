@@ -13,3 +13,6 @@ pyjwt~=2.10.1                 # signs and verifies the access token
 argon2-cffi~=25.1.0           # password hashing
 pandas~=2.3.0
 numpy~=2.3.0
+openpyxl~=3.1.5               # reads .xlsx: Online Retail II ships as a workbook
+scipy~=1.16.0                 # Spearman, Mann-Whitney, Kruskal-Wallis, periodogram
+scikit-learn~=1.7.0           # mutual information (Phase 4), models (Phase 5)
