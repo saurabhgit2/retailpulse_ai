@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import { validateCsvFile } from '../../utils/fileValidation';
+import { ACCEPT_ATTRIBUTE, validateCsvFile } from '../../utils/fileValidation';
 import { formatBytes } from '../../utils/format';
 import { MAX_UPLOAD_MB } from '../../utils/constants';
 
@@ -45,16 +45,16 @@ export function FileDropzone({ file, onFileSelected, maxMb = MAX_UPLOAD_MB, disa
         } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
       >
         <span className="text-sm font-semibold text-ink">
-          {file ? file.name : 'Drop a CSV file here, or click to choose one'}
+          {file ? file.name : 'Drop a CSV or Excel file here, or click to choose one'}
         </span>
         <span className="text-xs text-muted">
-          {file ? formatBytes(file.size) : `CSV only · up to ${maxMb} MB`}
+          {file ? formatBytes(file.size) : `CSV or Excel · up to ${maxMb} MB`}
         </span>
       </label>
       <input
         id={inputId}
         type="file"
-        accept=".csv,text/csv"
+        accept={ACCEPT_ATTRIBUTE}
         className="sr-only"
         disabled={disabled}
         aria-describedby={error ? `${inputId}-error` : undefined}
