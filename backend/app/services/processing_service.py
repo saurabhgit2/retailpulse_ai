@@ -22,11 +22,12 @@ import pandas as pd
 from app.core.config import get_settings
 from app.core.errors import RetailPulseError
 from app.db.repositories import datasets as dataset_repo
+from app.db.repositories.analytics import delete_cached_analyses
 from app.db.repositories.sales import store_clean_dataset
 from app.db.session import SessionFactory
 from app.preprocessing import validation
 from app.preprocessing.cleaning import build_quality_report, clean_dataset
-from app.preprocessing.csv_io import CsvReadError, read_csv
+from app.preprocessing.csv_io import CsvReadError, read_table
 from app.preprocessing.field_guide import compute_capabilities
 
 logger = logging.getLogger(__name__)
@@ -61,7 +62,7 @@ def process_dataset(dataset_id: uuid.UUID) -> None:
         source_columns = [column for column in mapping.values() if column]
 
         logger.info("Processing dataset %s (%s)", dataset_id, dataset.original_filename)
-        raw, _ = read_csv(Path(dataset.storage_path), columns=source_columns)
+        raw, _ = read_table(Path(dataset.storage_path), columns=source_columns)
         read_seconds = time.perf_counter() - started
 
         result = clean_dataset(raw, mapping, options)
@@ -77,6 +78,10 @@ def process_dataset(dataset_id: uuid.UUID) -> None:
             result.frame["occurred_at"].dt.to_period("W").nunique() if result.rows_clean else 0
         )
         validation.validate_clean_result(result.rows_clean, distinct_weeks, settings.min_clean_rows)
+
+        # Reprocessing produces new numbers, so anything cached from the old
+        # run must go before the new rows land.
+        delete_cached_analyses(session, dataset.id)
 
         rows_written = store_clean_dataset(
             session, dataset.id, result.frame, result.product_variants
