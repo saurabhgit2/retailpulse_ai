@@ -131,3 +131,48 @@ def test_the_deseasonalised_series_is_the_data_with_the_season_removed():
     trend = 1000 + 5 * TIME
     assert np.std(adjusted[usable] - trend[usable]) < np.std(observed[usable] - trend[usable]) / 3
     assert np.std(adjusted[usable]) < np.std(observed[usable])
+
+
+def test_seasonal_strength_is_withheld_when_the_history_cannot_support_it():
+    """Measured on pure noise with no seasonality at all, two cycles of weekly
+    data scores 0.91 - the statistic saturates because each phase is fitted to
+    two observations. Printing that in a report would be a false claim, so it
+    is withheld rather than published with a caveat."""
+    rng = np.random.default_rng(0)
+    noise = pd.Series(1000 + rng.normal(0, 100, 106))   # 2.0 cycles, no season
+
+    result = classical_decomposition(noise, 52)
+
+    assert result["weak_seasonal_estimate"] is True
+    assert result["seasonal_strength"] is None
+    assert "not reported" in result["seasonal_estimate_note"]
+
+
+def test_seasonal_strength_is_reported_once_there_is_enough_history():
+    time = np.arange(200)
+    signal = 1000 + 5 * time + 200 * np.sin(2 * np.pi * time / 52)
+
+    result = classical_decomposition(pd.Series(signal), 52)
+
+    assert result["seasonal_strength"] > 0.8
+
+
+def test_a_calendar_bucket_with_few_observations_is_flagged_as_uninterpretable():
+    """Online Retail II has seven trading Saturdays in two years. A "Saturday
+    index" there describes seven days, not Saturdays, and the honest reading is
+    that the retailer does not trade then."""
+    days = pd.date_range("2009-12-01", periods=740, freq="D")
+    trading = pd.DataFrame({
+        "period": [day for day in days if day.dayofweek != 5],
+        "gross_revenue": 1000.0,
+    })
+    rare = pd.DataFrame({
+        "period": [day for day in days if day.dayofweek == 5][:7],
+        "gross_revenue": 400.0,
+    })
+
+    indices = calendar_indices(pd.concat([trading, rare], ignore_index=True))
+    by_day = {row["label"]: row for row in indices["day_of_week"]}
+
+    assert by_day["Saturday"]["reliable"] is False
+    assert by_day["Monday"]["reliable"] is True

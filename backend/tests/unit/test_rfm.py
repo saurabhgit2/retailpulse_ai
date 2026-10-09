@@ -109,7 +109,8 @@ def test_skewed_monetary_values_trigger_a_transform_suggestion():
         np.full(199, 100.0), [500_000.0]
     ])
     result = build_rfm(customers)
-    assert any("log transform" in note for note in result["clustering_notes"])
+    notes = " ".join(result["clustering_notes"])
+    assert "transform before standardising" in notes
 
 
 def test_the_labels_are_not_presented_as_a_clustering_result():
@@ -124,3 +125,44 @@ def test_guests_are_called_out_as_excluded():
 
 def test_an_empty_customer_set_is_reported_rather_than_raising():
     assert build_rfm(pd.DataFrame())["available"] is False
+
+
+def test_a_log_transform_is_not_suggested_when_monetary_value_can_be_negative():
+    """Customers whose returns exceed their purchases have negative net value.
+    log(x) is undefined there, so advice to "take a log" would send the
+    clustering work into a wall of NaNs."""
+    customers = _customers(count=200, seed=4)
+    customers.loc[:4, "returns_value"] = 99_999.0     # five net-negative customers
+
+    result = build_rfm(customers)
+    notes = " ".join(result["clustering_notes"])
+
+    assert result["negative_monetary_customers"] >= 5
+    assert result["minimum_monetary"] < 0
+    assert "plain log will not work" in notes
+    assert "signed" in notes and "excluding them" in notes
+
+
+def test_an_all_positive_monetary_distribution_keeps_the_simple_advice():
+    customers = _customers(count=200, seed=5)
+    customers["returns_value"] = 0.0
+
+    result = build_rfm(customers)
+    notes = " ".join(result["clustering_notes"])
+
+    assert result["negative_monetary_customers"] == 0
+    assert "plain log will not work" not in notes
+
+
+def test_the_skew_direction_matches_its_sign():
+    """A negative skewness described as "right-skewed" is the kind of wrong
+    detail that survives into a report."""
+    customers = _customers(count=200, seed=4)
+    customers.loc[:4, "returns_value"] = 99_999.0     # drags the tail left
+
+    result = build_rfm(customers)
+    notes = " ".join(result["clustering_notes"])
+
+    assert result["distributions"]["monetary"]["skewness"] < 0
+    assert "left-skewed" in notes
+    assert "right-skewed" not in notes

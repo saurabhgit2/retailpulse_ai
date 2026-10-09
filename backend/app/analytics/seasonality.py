@@ -23,6 +23,10 @@ import numpy as np
 import pandas as pd
 
 DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+# Below this many observations a calendar bucket is reported but not
+# treated as an index worth interpreting.
+MIN_BUCKET_OBSERVATIONS = 20
+
 MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
                "July", "August", "September", "October", "November", "December"]
 
@@ -42,13 +46,19 @@ def _index_table(frame: pd.DataFrame, group: pd.Series, labels: list[str] | None
     rows = []
     for key, mean_value in means.items():
         position = int(key)
+        observations = int(grouped.size().loc[key])
         rows.append({
             "bucket": position,
             "label": labels[position] if labels and 0 <= position < len(labels) else str(key),
             "mean": float(mean_value),
             "total": float(grouped.sum().loc[key]),
-            "observations": int(grouped.size().loc[key]),
+            "observations": observations,
             "index": float(mean_value / overall) if overall else None,
+            # A bucket seen only a handful of times is not a seasonal pattern.
+            # Online Retail II has seven trading Saturdays in two years, so a
+            # "Saturday index" there describes seven days, not Saturdays - and
+            # the right reading is that the retailer does not trade then.
+            "reliable": observations >= MIN_BUCKET_OBSERVATIONS,
         })
     return sorted(rows, key=lambda row: row["bucket"])
 
@@ -135,8 +145,16 @@ def classical_decomposition(
         else series / (trend * seasonal).replace(0, np.nan)
     )
 
-    strength = seasonal_strength(seasonal, remainder, model)
     cycles = observations / period
+    # Seasonal strength is only meaningful with enough cycles to estimate each
+    # phase from more than a couple of observations. Below that the seasonal
+    # component absorbs the noise, the remainder collapses, and F_S tends to 1
+    # whatever the data: measured on pure noise with no seasonality at all,
+    # two cycles of weekly data scores 0.91. Reporting that number would be a
+    # false claim, so it is withheld rather than printed with a caveat.
+    strength = (
+        seasonal_strength(seasonal, remainder, model) if cycles >= 3 else None
+    )
     return {
         "available": True,
         "period": period,
@@ -153,7 +171,9 @@ def classical_decomposition(
             None if cycles >= 3 else
             f"Only {cycles:.1f} cycles of history: each seasonal phase is "
             f"estimated from about {cycles:.0f} observations, so the seasonal "
-            f"component is fitted to noise as much as to season."
+            f"component is fitted to noise as much as to season. Seasonal "
+            f"strength is not reported, because at this history length it "
+            f"returns a high value even for a series with no seasonality."
         ),
         "seasonal_strength": strength,
         "index": [str(pd.Timestamp(i).date()) if not isinstance(i, int) else int(i)

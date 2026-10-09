@@ -301,7 +301,9 @@ def profile(path: Path, out_dir: Path, *, synthetic: bool, date_format: str | No
             ["Cycles of history",
              f"{seasonality['decomposition'].get('cycles', 0):.1f}"],
             ["Seasonal strength",
-             f"{seasonality['decomposition'].get('seasonal_strength') or 0:.3f}"],
+             f"{seasonality['decomposition']['seasonal_strength']:.3f}"
+             if seasonality["decomposition"].get("seasonal_strength") is not None
+             else "not reported (too few cycles)"],
         ], ["Measure", "Value"]),
         "",
     ]
@@ -313,9 +315,10 @@ def profile(path: Path, out_dir: Path, *, synthetic: bool, date_format: str | No
         "",
         _table([
             [row["label"], f"{row['index']:.2f}" if row["index"] else "-",
-             f"{row['observations']:,}"]
+             f"{row['observations']:,}",
+             "yes" if row.get("reliable", True) else "**too few to interpret**"]
             for row in seasonality["calendar"]["day_of_week"]
-        ], ["Day", "Index", "Observations"]),
+        ], ["Day", "Index", "Observations", "Interpretable"]),
         "",
         "## 5. Concentration",
         "",
