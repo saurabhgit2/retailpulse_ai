@@ -298,8 +298,15 @@ def test_another_users_dataset_is_not_found_rather_than_forbidden(ready_dataset,
     assert response.status_code == 404
 
 
-def test_analytics_require_authentication(ready_dataset, client):
-    _, dataset_id = ready_dataset
+def test_analytics_require_authentication(ready_dataset):
+    """`registered_client` signs in by mutating the shared `client` fixture, so
+    asking for `client` here would hand back the *same* object with its
+    Authorization header still attached - and the test would pass a signed-in
+    request while claiming to test an anonymous one. The header is removed
+    explicitly instead."""
+    client, dataset_id = ready_dataset
+    client.headers.pop("Authorization", None)
+
     assert client.get(f"{DATASETS}/{dataset_id}/analytics/kpis").status_code == 401
 
 
