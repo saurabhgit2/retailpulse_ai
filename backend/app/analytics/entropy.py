@@ -38,13 +38,27 @@ def entropy_from_counts(counts: np.ndarray | pd.Series | list[float]) -> float:
 
 
 def entropy(values: pd.Series) -> float:
-    """Entropy of a categorical column, ignoring missing values."""
-    return entropy_from_counts(values.dropna().value_counts().to_numpy())
+    """Entropy of a categorical column, ignoring missing values.
+
+    Values are cast to strings first. Entropy depends only on how often each
+    distinct value occurs, not on its type, and casting avoids pandas inferring
+    a dtype for the value_counts index - which it warns about for object
+    columns and will change in a future version.
+    """
+    return entropy_from_counts(_counts(values))
 
 
 def max_entropy(category_count: int) -> float:
     """log2 k: the entropy of k equally likely categories."""
     return float(np.log2(category_count)) if category_count > 1 else 0.0
+
+
+def _counts(values: pd.Series) -> np.ndarray:
+    """Occurrence counts of each distinct value, as a plain array."""
+    clean = values.dropna()
+    if clean.empty:
+        return np.array([], dtype=float)
+    return clean.astype("string").value_counts().to_numpy()
 
 
 def normalised_entropy(values: pd.Series) -> float:
@@ -54,7 +68,7 @@ def normalised_entropy(values: pd.Series) -> float:
     ceiling = max_entropy(distinct)
     if ceiling <= _EPSILON:
         return 0.0
-    return float(entropy_from_counts(clean.value_counts().to_numpy()) / ceiling)
+    return float(entropy_from_counts(_counts(clean)) / ceiling)
 
 
 def joint_entropy(left: pd.Series, right: pd.Series) -> float:
