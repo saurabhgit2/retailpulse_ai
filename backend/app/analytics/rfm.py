@@ -26,6 +26,8 @@ k-means is sensitive to outliers and to variables on incomparable scales.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import numpy as np
 import pandas as pd
 
@@ -192,12 +194,34 @@ def build_rfm(
         "scales (Chen, Sain & Guo 2012). Recency is in days, frequency is a count "
         "and monetary is money, so they must be standardised before clustering.",
     ]
+    minimum_monetary = float(frame["monetary"].min())
+    negative_customers = int((frame["monetary"] < 0).sum())
+
     if abs(monetary_skew) > 1:
-        clustering_notes.append(
-            f"Monetary value is strongly right-skewed (skewness {monetary_skew:.1f}): "
-            f"a log transform before standardising is worth testing, and the result "
-            f"of both choices should be reported."
+        # Name the direction from the sign. Saying "right-skewed" for a
+        # negative skewness is the kind of detail that survives into a report
+        # and is wrong there.
+        direction = "right" if monetary_skew > 0 else "left"
+        note = (
+            f"Monetary value is strongly {direction}-skewed "
+            f"(skewness {monetary_skew:.1f}), so a transform before "
+            f"standardising is worth testing."
         )
+        if minimum_monetary <= 0:
+            # log(x) is undefined at or below zero, and these customers are
+            # real: they returned more than they bought. Saying "take a log"
+            # without saying what to do about them would send Phase 5b into a
+            # wall of NaNs.
+            note += (
+                f" A plain log will not work: {negative_customers} customers have a "
+                f"net monetary value of zero or below (minimum {minimum_monetary:,.2f}), "
+                f"because their returns exceed their purchases. Options are a signed "
+                f"log, a shift before the log, or excluding them and reporting how "
+                f"many were excluded."
+            )
+        else:
+            note += " A log transform is the usual first choice."
+        clustering_notes.append(note)
     if frame["frequency"].median() <= 1:
         clustering_notes.append(
             "At least half of these customers bought only once, so the frequency "
@@ -216,6 +240,8 @@ def build_rfm(
         "segments": segments,
         "concentration": concentration(frame.set_index(frame.columns[0])["monetary"]),
         "monetary_gini": gini(frame["monetary"]),
+        "negative_monetary_customers": negative_customers,
+        "minimum_monetary": minimum_monetary,
         "clustering_notes": clustering_notes,
         "caveats": [
             "Guest sales have no customer identifier and are excluded from RFM "
@@ -225,5 +251,23 @@ def build_rfm(
             "stability analysis are RQ2.",
             "Recency is measured from the end of the data, not from today.",
         ],
-        "table": frame.drop(columns=["first_purchase", "last_purchase"]).to_dict(orient="records"),
+        # Cast before serialising: a stray Decimal or numpy scalar from the
+        # database layer is not JSON serialisable, and the failure surfaces as
+        # an opaque 500 rather than anything that points at this line.
+        "table": _json_safe(frame.drop(columns=["first_purchase", "last_purchase"])),
     }
+
+
+def _json_safe(frame: pd.DataFrame) -> list[dict[str, object]]:
+    """Plain Python types only, so the result can be stored and returned."""
+    safe = frame.copy()
+    for column in safe.columns:
+        if pd.api.types.is_integer_dtype(safe[column]):
+            safe[column] = safe[column].astype("int64")
+        elif pd.api.types.is_numeric_dtype(safe[column]):
+            safe[column] = safe[column].astype("float64")
+        else:
+            safe[column] = safe[column].map(
+                lambda value: float(value) if isinstance(value, Decimal) else value
+            )
+    return safe.to_dict(orient="records")

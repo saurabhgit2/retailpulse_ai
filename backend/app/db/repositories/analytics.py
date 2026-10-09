@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
+from decimal import Decimal
 from datetime import datetime
 
 import pandas as pd
@@ -119,8 +120,23 @@ _GUEST_REVENUE = func.coalesce(
 
 
 def _frame(session: Session, statement: Select) -> pd.DataFrame:
-    result = session.execute(statement)
-    return pd.DataFrame(result.mappings().all())
+    """Run a query and return a DataFrame with plain Python numbers.
+
+    PostgreSQL NUMERIC arrives as `decimal.Decimal`, which is correct for money
+    but is not JSON serialisable and is not reliably converted by
+    `pd.to_numeric` across pandas versions. Converting here means the pure
+    analytics core and every response handle ordinary floats, and no module
+    downstream has to know the database uses NUMERIC.
+    """
+    frame = pd.DataFrame(session.execute(statement).mappings().all())
+    for column in frame.columns:
+        if frame[column].dtype == "object" and frame[column].map(
+            lambda value: isinstance(value, Decimal)
+        ).any():
+            frame[column] = frame[column].map(
+                lambda value: float(value) if isinstance(value, Decimal) else value
+            ).astype("float64")
+    return frame
 
 
 def totals(session: Session, dataset_id: uuid.UUID, filters: Filters) -> PeriodTotals:
