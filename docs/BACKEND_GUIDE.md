@@ -558,19 +558,180 @@ reports a conflict, that is worth reporting rather than working around.
 
 ---
 
-## 15. Where Phase 4 plugs in
+## 15. Phase 4 — analytics and entropy
 
-The next phase adds analytics endpoints. The seams are already there:
+### What we are building
 
-* **Query, don't load.** Add repository functions that aggregate in SQL
-  (`GROUP BY date_trunc('week', occurred_at)`) and return small DataFrames. Never pull a million
-  rows into pandas for a chart.
-* **New pure module.** `app/analytics/` follows the same rule as `preprocessing/`: DataFrames in,
-  plain results out, no FastAPI or SQLAlchemy.
-* **Cache.** The `analysis_results` table from architecture §8.2 is not created yet; it arrives with
-  the first expensive analysis, in migration `0003`.
-* **Filters.** One Pydantic model injected with `Depends` gives every analytics endpoint the same
-  date/region/product filters.
+Twelve read-only endpoints under `/datasets/{id}/analytics/`, plus
+`/datasets/{id}/filter-options`. Together they answer the §12.5 EDA catalogue: what the headline
+numbers are, how they move over time, where revenue comes from, how the distributions are shaped,
+what the relationships look like, which features carry information about demand, and which periods
+are unusual.
+
+### Why this way
+
+**PostgreSQL aggregates; pandas analyses.** A million sales rows become a few hundred weekly totals
+in the database, and only those cross into Python. Every query starts with `dataset_id` then a date
+range, which is the leading edge of the composite index built in Phase 3. The one exception is
+`distributions`, which needs the values themselves for quantiles and a histogram — so it pulls one
+column (about 8 MB per million rows) and the result is cached.
+
+**`app/analytics/` is pure.** No FastAPI, no SQLAlchemy — checked, not just intended. That is what
+lets `scripts/profile_dataset.py` import the same functions and produce the figures for your report
+directly from a file. The report and the dashboard cannot disagree, because they run the same code.
+
+### Files
+
+| Module | What it does |
+|---|---|
+| `analytics/kpis.py` | The §12.4 definitions, Gini and Pareto concentration |
+| `analytics/trends.py` | Time series, moving average, growth, partial-period flags, `week_start` |
+| `analytics/breakdowns.py` | Ranked products / regions / categories with Pareto shares |
+| `analytics/distributions.py` | Histograms, percentiles, skew, Tukey and robust-z outlier counts |
+| `analytics/seasonality.py` | Calendar indices and a classical decomposition |
+| `analytics/relationships.py` | Pearson *and* Spearman, price-elasticity proxy, discount proxy |
+| `analytics/statistics.py` | Mann-Whitney / Kruskal-Wallis with effect sizes |
+| `analytics/entropy.py` | Shannon entropy, mutual information, symmetric uncertainty |
+| `analytics/features.py` | Lagged feature table, two MI estimators, rank agreement |
+| `analytics/series_profile.py` | ADI, CV², intermittency class, spectral entropy |
+| `analytics/anomalies.py` | Robust baseline and explained anomalies |
+| `db/repositories/analytics.py` | The aggregation SQL and the shared filter builder |
+| `db/models/analysis.py`, `alembic/versions/0003_*` | The result cache |
+| `services/analytics_service.py` | Fetch, compute, cache; capability and readiness checks |
+| `api/routes/analytics.py`, `schemas/analytics.py` | The endpoints and the shared filter dependency |
+
+### How it works — the parts worth defending
+
+**Growth is withheld rather than guessed.** A KPI comparison is only computed when both windows are
+the same length and both complete; otherwise every growth figure is `null` with a note. Comparing a
+part week against a whole one manufactures a decline.
+
+**A KPI with no source column is hidden, not zero.** No invoice column means no order count, so AOV
+is `null`. `None` and `0` are different claims.
+
+**Entropy is implemented from the definitions** (§12.7), because the report has to explain them. The
+tests check hand-calculable values — a fair coin is exactly 1 bit, four equal categories exactly 2.
+Mutual information is reported at 3, 5 and 10 target bins, because binning changes the answer and
+presenting one number would hide that. Identifier-like columns are never ranked: MI is biased
+towards high cardinality, and a unique ID has maximal MI and zero generalisation.
+
+**Non-parametric tests with effect sizes.** Retail distributions are nowhere near normal, so
+Mann-Whitney and Kruskal-Wallis replace t-tests and ANOVA. Above 10,000 rows the response carries a
+warning that at that size almost any difference is "significant" and the effect size is what to
+read. Normality is reported as shape statistics rather than a hypothesis test, for the same reason.
+
+**Anomaly detection is all medians, and that is the whole design.** This module took four attempts,
+and each failure is now a test:
+
+1. *A mean-based scale divided by numerical dust.* With two cycles of history a 52-phase seasonal
+   component fits the noise, the remainder collapses to zero, and ordinary weeks came back as
+   10¹⁵-sigma events. Fixed with a floor on the scale relative to the series' own spread.
+2. *Too few cycles for any seasonal claim.* Measured on noise containing no anomaly at all, a
+   52-phase basis flagged **47%** of periods at 2.3 cycles and **14%** at 4, against 0.2% at 10. The
+   detector now needs eight cycles before it will subtract a seasonal profile; below that it removes
+   the trend and claims nothing about seasonality.
+3. *A moving-average trend spread one spike across a year*, and a *mean* seasonal profile let one
+   extreme week reshape its own week-of-year — so a single real event invented anomalies a year
+   either side of itself. Both baselines are now medians, which do not move until half the data is
+   anomalous.
+4. *Additive seasonality could not track multiplicative growth.* December at 3× the level with a
+   rising trend flagged nearly every December. The baseline is now a ratio when the series is
+   strictly positive, and residuals are scored proportionally. Finally, the seasonal phase comes
+   from the **calendar**, not the row number: `index % 52` drifts about a week a year, so after a
+   decade December sits in a different slot. False-positive rate on clean seasonal data: 9.8% → 1.7%.
+
+**A pandas trap worth knowing.** `to_period("W-MON")` means the week *ending* Monday, so its
+`start_time` is a **Tuesday**. Only `W-SUN` gives Monday starts, which is what PostgreSQL's
+`date_trunc('week')` produces. Getting this wrong does not raise — a `date_range(freq="W-MON")`
+reindex simply matches nothing and returns a full series of zeros. `trends.week_start()` exists so
+that trap lives in one place, and a test asserts it.
+
+### How to verify
+
+```powershell
+pytest tests/unit          # 152 tests, no database needed
+pytest                     # adds the API and integration tests
+python scripts/profile_dataset.py ../data/sample/SYNTHETIC_retail_sales.csv --synthetic
+```
+
+Then `/docs` → any analytics endpoint → **Try it out**.
+
+### What to learn
+
+Window functions and `GROUP BY date_trunc`; why aggregation belongs in the database; Shannon
+entropy and mutual information; non-parametric tests and effect sizes; robust statistics (median,
+MAD, breakdown point); classical decomposition and seasonal strength; ADI/CV² intermittency
+classes; spectral entropy; cache keys and canonical hashing.
+
+### Phase 3's remaining 15%, also in this release
+
+* **Excel support.** Online Retail II ships as a workbook with a sheet per year. `csv_io.read_table`
+  reads both sheets and stacks the ones whose columns match, skipping anything else with a warning.
+  `usecols` is applied *after* stacking, because pandas applies it to every sheet and one unrelated
+  "Notes" tab would otherwise fail the whole read. openpyxl is slow on a million rows, so
+  `scripts/excel_to_csv.py` converts once if you would rather work from CSV.
+* **`scripts/profile_dataset.py`** — the EDA deliverable. Reads a file, cleans it, and writes
+  `PROFILE.md` plus CSVs: shape and exclusions, KPIs, distributions, seasonality, concentration,
+  entropy per categorical feature, and the series forecastability profile.
+* **`/datasets/{id}/filter-options`** — date bounds, regions, categories and top products.
+
+### Added after reviewing the literature (6 Oct)
+
+Three additions, each tied to a specific paper rather than to taste:
+
+* **RFM** (`analytics/rfm.py`, `GET /analytics/rfm`). Chen, Sain & Guo (2012), *Journal of Database
+  Marketing & Customer Strategy Management* 19(3), 197–208 — the paper behind this dataset —
+  aggregate Recency, Frequency and Monetary per customer and then cluster with k-means. This module
+  does the aggregation and describes the distributions; the clustering is RQ2, in Phase 5b. It also
+  carries that paper's own warning forward: k-means is sensitive to outliers and to variables on
+  incomparable scales, so the response names the standardisation decision Phase 5b has to make, and
+  flags a strongly skewed monetary distribution as a candidate for a log transform.
+  Two differences from the paper to state in the report: it identified customers by **postcode**
+  (the public release has `Customer ID`), and it restricted to **UK customers in 2011** — which the
+  filter set reproduces without code changes.
+* **A deseasonalised series** from the decomposition. Chu & Zhang (2003), *Int. J. Production
+  Economics* 86, 217–231, found that prior seasonal adjustment **significantly improved**
+  neural-network accuracy on aggregate retail sales, and that the best model overall was a neural
+  network fitted to deseasonalised data. Phase 5 can now train on that series directly and compare
+  against models fitted to the raw one — a cheap, well-grounded experiment for RQ1.
+* **Basket size** (`GET /analytics/baskets`, and a section in the profiling report). Chen et al.
+  read 18.3 distinct items per transaction as evidence that this retailer's customers are largely
+  organisations rather than individuals — a substantial conclusion drawn from one simple aggregate.
+
+Also worth carrying into Phase 5: Aras, Deveci Kocakoç & Polat (2017), *Journal of Business
+Economics and Management* 18(5), 803–832, found that **no single model won across all series** and
+that combined forecasts gave statistically significant accuracy gains — direct support for RQ1's
+premise and for including a combination in the model ladder. Auppakorn & Phumchusri (2022, MSIE)
+compare TBATS, regression and XGBoost on daily SKU sales using **WAPE**, which supports that metric
+choice.
+
+### What the supplied literature does *not* support
+
+Checked against the seventeen papers provided, so it is not mistaken for grounded method:
+
+* **Shannon entropy and mutual information for feature analysis** (§12.7). The only occurrence of
+  "entropy" in any retail-relevant paper in that set is *classification entropy* as a fuzzy
+  clustering validity index — a different concept. The approach may be sound and original, but it
+  needs its own references or an explicit framing as the author's contribution.
+* **Adjusted Rand Index and segment stability across windows** (RQ2). "Adjusted Rand" does not
+  appear at all in the segmentation review; the indices in use there are silhouette,
+  Davies–Bouldin, Calinski–Harabasz, elbow and the gap statistic.
+* **Actionability-ranked association rules** (RQ3). Those papers rank by support, confidence and
+  lift. **MASE** appears nowhere; WAPE in one paper only.
+
+### Still open
+
+* **ADF and KPSS stationarity tests** need statsmodels, which arrives in Phase 5 with ETS and ARIMA —
+  which is also where differencing decisions are actually made. The endpoint returns
+  `stationarity.available = false` with that reason rather than pretending.
+* **STL** for the same reason: seasonality currently uses classical decomposition. Seasonal strength
+  is defined identically for both, so the measure stays comparable when the switch happens.
+* **Model-based feature importance** (XGBoost gain, permutation importance) needs a trained model,
+  so §12.7's third comparison completes in Phase 5.
+
+---
+
+## 16. Where Phase 5 plugs in
 
 Small deviations from the architecture document, all deliberate:
 
