@@ -31,7 +31,10 @@ logger = logging.getLogger(__name__)
 
 ENCODINGS = ("utf-8", "utf-8-sig", "latin-1")
 EXCEL_SUFFIXES = (".xlsx", ".xlsm")
-CSV_SUFFIXES = (".csv", ".txt")
+# .txt is deliberately not accepted: nothing in this project needs it, and
+# widening the upload surface for no reason is how a validator stops being
+# a validator.
+CSV_SUFFIXES = (".csv",)
 SUPPORTED_SUFFIXES = CSV_SUFFIXES + EXCEL_SUFFIXES
 
 # Reported in place of an encoding when the source was a workbook: Excel files

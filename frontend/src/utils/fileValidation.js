@@ -4,7 +4,7 @@
  * be bypassed.
  */
 
-const ACCEPTED_SUFFIXES = ['.csv', '.txt', '.xlsx', '.xlsm'];
+const ACCEPTED_SUFFIXES = ['.csv', '.xlsx', '.xlsm'];
 
 // Browsers report these types inconsistently (Windows often calls a CSV
 // application/vnd.ms-excel), so the extension is the real check and the type is
