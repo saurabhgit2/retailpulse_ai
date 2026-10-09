@@ -126,3 +126,57 @@ def test_report_has_everything_the_screen_shows(result, mapping):
     }
     assert all("rationale" in action for action in report["actions"])
     assert report["clean_data_sha256"] == result.fingerprint
+
+
+def _two_year_frame(saturday_count: int = 7) -> pd.DataFrame:
+    """Online Retail II's calendar shape: weekdays and Sundays trade, Saturdays
+    almost never do."""
+    header = ["Invoice", "StockCode", "Description", "Quantity", "InvoiceDate",
+              "Price", "Customer ID", "Country"]
+    rows = []
+    for day in pd.date_range("2009-12-01", "2011-12-09", freq="D"):
+        if day.dayofweek == 5:
+            continue
+        rows.append([f"{5000 + len(rows)}", "85123A", "  white mug  ", "2",
+                     day.strftime("%Y-%m-%d 09:00:00"), "3.00", "13085.0", "United Kingdom"])
+    saturdays = [d for d in pd.date_range("2009-12-01", "2011-12-09", freq="D")
+                 if d.dayofweek == 5][:saturday_count]
+    for day in saturdays:
+        rows.append([f"{9000 + len(rows)}", "22423", "CAKE STAND", "1",
+                     day.strftime("%Y-%m-%d 09:00:00"), "9.95", "13086.0", "United Kingdom"])
+    return pd.DataFrame(rows, columns=header).astype("string")
+
+
+def _action(result, step):
+    return next(action for action in result.actions if action.step == step)
+
+
+def test_a_step_cannot_affect_more_rows_than_the_file_contains(mapping):
+    """Summing changes per column counts cells, not rows - and a report that
+    says "1,073,977 rows affected" for a 1,067,371-row file invites exactly the
+    question you do not want in a viva."""
+    raw = _two_year_frame()
+
+    result = clean_dataset(raw, mapping, {"date_format": "iso"})
+    tidied = _action(result, "normalise_text")
+
+    assert 0 < tidied.rows_affected <= len(raw)
+
+
+def test_a_weekday_that_almost_never_trades_is_reported_as_a_closure(mapping):
+    """Online Retail II trades on 7 Saturdays out of about 105. Flagging only
+    weekdays with *zero* trading calls that "none" - true, and useless to a
+    daily model that needs to tell a closure from a quiet day."""
+    result = clean_dataset(_two_year_frame(), mapping, {"date_format": "iso"})
+    calendar = _action(result, "closure_calendar")
+
+    assert "Saturday (7 of 105)" in calendar.rationale
+    assert "no trading at all: none" in calendar.rationale
+
+
+def test_a_weekday_that_trades_normally_is_not_flagged(mapping):
+    """The threshold must not catch an ordinary trading day."""
+    result = clean_dataset(_two_year_frame(saturday_count=60), mapping, {"date_format": "iso"})
+    calendar = _action(result, "closure_calendar")
+
+    assert "Saturday" not in calendar.rationale

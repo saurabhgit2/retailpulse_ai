@@ -222,11 +222,19 @@ def clean_dataset(
 
 IDENTIFIER_COLUMNS = ("invoice_id", "product_code", "customer_id")
 
+# A weekday trading on fewer than this share of its possible dates is
+# treated as a closure day rather than a quiet trading day.
+RARE_TRADING_SHARE = 0.2
+
 
 def _step_1_normalise_text(pipe: _Pipeline) -> None:
     """Trim whitespace, upper-case product codes, and repair float-looking IDs."""
     frame = pipe.frame
-    changed = 0
+    # A row counts once however many of its cells were tidied. Summing per
+    # column would count cells, and the report labels this figure "rows
+    # affected" - which is how a step can claim to have touched more rows than
+    # the file contains.
+    touched = pd.Series(False, index=frame.index)
 
     for column in frame.columns:
         if frame[column].dtype == object or str(frame[column].dtype) == "string":
@@ -239,8 +247,10 @@ def _step_1_normalise_text(pipe: _Pipeline) -> None:
             if column == "product_code":
                 values = values.str.upper()
             values = values.replace({"": pd.NA})
-            changed += int((values.fillna("") != original.astype("string").fillna("")).sum())
+            touched |= values.fillna("") != original.astype("string").fillna("")
             frame[column] = values
+
+    changed = int(touched.sum())
 
     pipe.frame = frame
     pipe.note(
@@ -536,17 +546,41 @@ def _step_12_closure_calendar(pipe: _Pipeline) -> None:
         return
 
     weekday_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    traded = set(dates.dt.weekday.unique())
-    never_traded = [weekday_names[d] for d in range(7) if d not in traded]
 
     unique_days = pd.Series(sorted(dates.dt.normalize().unique()))
+    traded_per_weekday = unique_days.dt.weekday.value_counts()
+
+    # How many of each weekday the data span actually contains, so "traded on 7
+    # Saturdays" can be read against "there were 105 Saturdays".
+    span = pd.date_range(unique_days.min(), unique_days.max(), freq="D")
+    possible_per_weekday = pd.Series(span.weekday).value_counts()
+
+    never_traded, rarely_traded = [], []
+    for day in range(7):
+        traded_days = int(traded_per_weekday.get(day, 0))
+        possible = int(possible_per_weekday.get(day, 0))
+        if possible == 0:
+            continue
+        if traded_days == 0:
+            never_traded.append(weekday_names[day])
+        elif traded_days / possible < RARE_TRADING_SHARE:
+            # Online Retail II trades on 7 Saturdays out of about 105. Reporting
+            # only weekdays with *zero* trading would call that "none" - true,
+            # and useless. The retailer is closed on Saturdays, and a daily
+            # model has to know that.
+            rarely_traded.append(
+                f"{weekday_names[day]} ({traded_days} of {possible})"
+            )
+
     gaps = unique_days.diff().dt.days.fillna(0)
     long_gaps = int((gaps >= 4).sum())
 
-    if never_traded or long_gaps:
+    if never_traded or rarely_traded or long_gaps:
         detail = []
         if never_traded:
             detail.append(f"no trading on {', '.join(never_traded)}")
+        if rarely_traded:
+            detail.append(f"almost no trading on {', '.join(rarely_traded)}")
         if long_gaps:
             detail.append(f"{long_gaps} gaps of 4 days or more")
         pipe.warnings.append(
@@ -562,6 +596,8 @@ def _step_12_closure_calendar(pipe: _Pipeline) -> None:
         "closure_calendar",
         "Checked the trading calendar",
         f"Days with no trading at all: {', '.join(never_traded) if never_traded else 'none'}. "
+        f"Days with almost no trading: "
+        f"{', '.join(rarely_traded) if rarely_traded else 'none'}. "
         f"Gaps of four days or more: {long_gaps}.",
         0,
         kind="info",
