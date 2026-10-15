@@ -15,7 +15,11 @@ The order of the modules is the order of the argument:
 5. `combination` - averaging the members (Aras et al. 2017).
 6. `intervals`   - empirical prediction intervals and their coverage.
 7. `significance` - Friedman + Bonferroni, as in Aras et al. (2017).
-8. `evaluate` - the harness that runs the ladder over the folds.
+8. `importance`  - permutation importance from the fitted tree model, and
+                   whether it agrees with the Phase 4 mutual-information
+                   ranking. This is what completes §12.7.
+9. `evaluate` - the harness that runs the ladder over the folds, local and
+                pooled models together.
 
 **What the supplied literature actually supports**, so the report does not
 overclaim. Checked against the seventeen papers provided:

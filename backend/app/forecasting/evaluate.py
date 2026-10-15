@@ -119,6 +119,73 @@ def run_fold(
     return results
 
 
+def run_fold_global(
+    series: pd.Series,
+    panel: pd.DataFrame,
+    split: Split,
+    global_factories: dict[str, Callable[[], Any]],
+    *,
+    target_series_id: str,
+    season_length: int = 52,
+) -> list[FoldResult]:
+    """Fit a pooled model on many series, score it on the target one.
+
+    A global model does not fit the `Forecaster` interface, and forcing it to
+    would be dishonest about what it is: `Forecaster` takes one series, and the
+    entire point of a global model is that one SKU has only ~105 weekly points
+    and a tree ensemble needs thousands of rows. So it gets its own fold
+    runner, and the results join the same table.
+
+    **What makes this fair.** The panel is cut at the fold's last training
+    period, exactly as the local models see only `split.train`. The model then
+    forecasts the target series over the same test window, and is scored by the
+    same function against the same actuals. The one asymmetry - the global
+    model has seen *other series* during that period, which the local models
+    have not - is real, is the point of the comparison, and is why the results
+    table carries a `uses_exogenous` column. Say it in the method: this is
+    local statistical models versus global learned models, not model A versus
+    model B on identical information.
+    """
+    train, test = split.take(series)
+    actual = test.to_numpy(dtype="float64")
+    last_training_period = train.index[-1]
+
+    # The cut is on the panel's own calendar, so a series with a different
+    # start still contributes only its past.
+    history = panel[panel["period"] <= last_training_period]
+
+    results: list[FoldResult] = []
+    for name, factory in global_factories.items():
+        try:
+            if history.empty:
+                raise ValueError("No panel rows at or before this fold's training end.")
+            model = factory()
+            model.fit(history)
+            point = np.asarray(model.predict(history, target_series_id), dtype="float64")
+
+            if len(point) != split.horizon:
+                raise ValueError(
+                    f"{name} returned {len(point)} values for a horizon of "
+                    f"{split.horizon}."
+                )
+
+            results.append(FoldResult(
+                model=name,
+                fold=split.fold,
+                metrics=_score(actual, point, train, season_length),
+                forecast=point,
+                actual=actual,
+                details={**model.describe(), "uses_exogenous": True},
+            ))
+        except Exception as error:      # noqa: BLE001 - recorded, not swallowed
+            results.append(FoldResult(
+                model=name, fold=split.fold, metrics={},
+                forecast=np.full(len(actual), np.nan), actual=actual,
+                error=f"{type(error).__name__}: {error}",
+            ))
+    return results
+
+
 def errors_by_horizon_step(results: list[FoldResult], model: str) -> dict[int, list[float]]:
     """Signed errors per horizon step, pooled across folds. Feeds `intervals`."""
     collected: dict[int, list[float]] = {}
@@ -130,6 +197,69 @@ def errors_by_horizon_step(results: list[FoldResult], model: str) -> dict[int, l
         ):
             collected.setdefault(step, []).append(float(actual - forecast))
     return collected
+
+
+def build_intervals(
+    cv_results: list[FoldResult],
+    holdout_results: list[FoldResult],
+    model: str,
+    *,
+    level: float = 0.80,
+) -> dict[str, Any]:
+    """Prediction intervals for one model, sized from its own CV errors.
+
+    The intervals come from the errors the model made **during
+    cross-validation**, per horizon step, and are then checked against the
+    hold-out. That order matters: sizing an interval on the window you then
+    measure coverage on would guarantee good coverage and prove nothing.
+
+    Returns the interval around the hold-out point forecast plus the observed
+    coverage, so the report can put nominal and actual side by side. An 80%
+    interval that contains the truth 55% of the time is worse than no interval,
+    because it looks like information.
+    """
+    from app.forecasting.intervals import coverage, from_backtest
+
+    errors = errors_by_horizon_step(cv_results, model)
+    if not errors:
+        return {
+            "available": False,
+            "reason": (
+                f"'{model}' produced no usable cross-validation forecasts, so "
+                f"there are no errors to size an interval from."
+            ),
+        }
+
+    target = next(
+        (r for r in holdout_results if r.model == model and not r.error), None
+    )
+    if target is None:
+        return {
+            "available": False,
+            "reason": f"'{model}' has no hold-out forecast to put an interval around.",
+        }
+
+    interval = from_backtest(errors, target.forecast, level=level)
+    observed = coverage(target.actual, interval["lower"], interval["upper"], level=level)
+
+    return {
+        "available": True,
+        "model": model,
+        "level": level,
+        "method": interval["method"],
+        "errors_used": interval["errors_used"],
+        "notes": interval["notes"],
+        "point": [float(v) for v in target.forecast],
+        "lower": [None if np.isnan(v) else float(v) for v in interval["lower"]],
+        "upper": [None if np.isnan(v) else float(v) for v in interval["upper"]],
+        "actual": [float(v) for v in target.actual],
+        "coverage": observed,
+        "sizing_note": (
+            "Sized on cross-validation errors and checked against the hold-out. "
+            "Sizing on the hold-out itself would guarantee good coverage and "
+            "demonstrate nothing."
+        ),
+    }
 
 
 def results_table(results: list[FoldResult], metric: str = PRIMARY_METRIC) -> pd.DataFrame:
@@ -181,6 +311,9 @@ def run_experiment(
     combination_members: list[str] | None = None,
     metric: str = PRIMARY_METRIC,
     protocol: Protocol | None = None,
+    panel: pd.DataFrame | None = None,
+    global_factories: dict[str, Callable[[], Any]] | None = None,
+    target_series_id: str | None = None,
 ) -> dict[str, Any]:
     """Cross-validate the ladder. **Does not touch the hold-out.**
 
@@ -194,6 +327,32 @@ def run_experiment(
     results: list[FoldResult] = []
     for split in declared.folds:
         results.extend(run_fold(series, split, factories, season_length=season_length))
+
+    # Global models join the same table, scored on the same actuals by the same
+    # function. Without them RQ1 compares statistical models with each other
+    # rather than comparing families, which is a different question.
+    global_notes: list[str] = []
+    if global_factories:
+        if panel is None or panel.empty or not target_series_id:
+            global_notes.append(
+                "Global models were requested but no panel (or no target series "
+                "id) was supplied, so the tree family is missing from this "
+                "comparison. Say so rather than reporting the ranking as if all "
+                "families were present."
+            )
+        elif target_series_id not in set(panel["series_id"].astype(str)):
+            global_notes.append(
+                f"The target series '{target_series_id}' is not in the panel, so "
+                f"the global models had nothing to forecast. The panel must "
+                f"contain the series being compared."
+            )
+        else:
+            for split in declared.folds:
+                results.extend(run_fold_global(
+                    series, panel, split, global_factories,
+                    target_series_id=target_series_id,
+                    season_length=season_length,
+                ))
 
     # The combination is formed per fold from whichever members succeeded there,
     # so one model failing on one fold does not remove the combination entirely.
@@ -241,6 +400,10 @@ def run_experiment(
         "protocol": declared.as_dict(),
         "metric": metric,
         "fold_results": [r.as_dict() for r in everything],
+        # The objects themselves, for callers that need the arrays rather than
+        # the JSON view - `build_intervals` needs the per-step forecasts. The
+        # leading underscore marks them as not part of the stored record.
+        "_fold_objects": everything,
         "per_fold_table": table,
         "summary": summarise(everything, metric),
         "significance": significance,
@@ -248,6 +411,15 @@ def run_experiment(
             "rule": combination_rule,
             "members": members,
             "notes": combination_notes,
+        },
+        "global_models": {
+            "requested": sorted(global_factories or {}),
+            "target_series_id": target_series_id,
+            "panel_series": (
+                int(panel["series_id"].nunique()) if panel is not None and not panel.empty
+                else 0
+            ),
+            "notes": global_notes,
         },
         "holdout_scored": False,
         "note": (
@@ -265,6 +437,9 @@ def run_holdout(
     season_length: int = 52,
     protocol: Protocol | None = None,
     selected: str | None = None,
+    panel: pd.DataFrame | None = None,
+    global_factories: dict[str, Callable[[], Any]] | None = None,
+    target_series_id: str | None = None,
 ) -> dict[str, Any]:
     """Score the locked hold-out. Called once, at the end, and timestamped.
 
@@ -277,12 +452,18 @@ def run_holdout(
     declared = protocol or build_protocol(series, horizon=horizon, folds=1)
     holdout = declared.holdout
     results = run_fold(series, holdout, factories, season_length=season_length)
+    if global_factories and panel is not None and not panel.empty and target_series_id:
+        results.extend(run_fold_global(
+            series, panel, holdout, global_factories,
+            target_series_id=target_series_id, season_length=season_length,
+        ))
 
     return {
         "scored_at": datetime.now(UTC).isoformat(),
         "selected_before_scoring": selected,
         "holdout": holdout.as_dict(),
         "results": [r.as_dict() for r in results],
+        "_result_objects": results,
         "summary": summarise(results),
         "holdout_scored": True,
         "warning": (
