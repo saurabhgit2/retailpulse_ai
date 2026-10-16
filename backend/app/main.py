@@ -22,6 +22,7 @@ from app.api.error_handlers import register_error_handlers
 from app.api.routes import api_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging, new_request_id, request_id_var
+from app.services.forecast_service import recover_stuck_runs
 from app.services.processing_service import recover_stuck_datasets
 
 API_PREFIX = "/api/v1"
@@ -35,8 +36,11 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
     try:
         recover_stuck_datasets()
+        # A forecast run left "running" by a restart can never finish, and the
+        # UI would poll it forever. Failing it is kinder than leaving it.
+        recover_stuck_runs()
     except Exception:  # noqa: BLE001 - never stop the app from starting
-        logger.warning("Could not check for interrupted datasets (is the database running?)")
+        logger.warning("Could not check for interrupted work (is the database running?)")
     logger.info("RetailPulse API ready in %s mode", settings.app_env)
     yield
     logger.info("RetailPulse API shutting down")
