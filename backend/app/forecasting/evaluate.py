@@ -440,6 +440,8 @@ def run_holdout(
     panel: pd.DataFrame | None = None,
     global_factories: dict[str, Callable[[], Any]] | None = None,
     target_series_id: str | None = None,
+    combination_rule: str = "median",
+    combination_members: list[str] | None = None,
 ) -> dict[str, Any]:
     """Score the locked hold-out. Called once, at the end, and timestamped.
 
@@ -448,6 +450,12 @@ def run_holdout(
     between "we selected on CV and confirmed on hold-out" and "we ran
     everything on the hold-out and reported the best", which are different
     experiments with different claims.
+
+    **The combination is formed here too.** An earlier version ran only the
+    individual models, so when cross-validation selected the combination - which
+    is exactly what Aras et al. (2017) predict will happen - the selected model
+    had no hold-out score at all, and no prediction interval could be built for
+    it. A protocol that cannot score its own choice is not a protocol.
     """
     declared = protocol or build_protocol(series, horizon=horizon, folds=1)
     holdout = declared.holdout
@@ -458,6 +466,39 @@ def run_holdout(
             target_series_id=target_series_id, season_length=season_length,
         ))
 
+    train, test = holdout.take(series)
+    members = combination_members or [
+        name for name in factories if name not in {"naive", "drift"}
+    ]
+    available = {
+        r.model: r.forecast for r in results
+        if r.model in members and not r.error and not np.isnan(r.forecast).all()
+    }
+    combination_note: str | None = None
+    if len(available) >= 2:
+        combined = combine(available, rule=combination_rule)   # type: ignore[arg-type]
+        actual = test.to_numpy(dtype="float64")
+        results.append(FoldResult(
+            model=f"combination_{combination_rule}",
+            fold=holdout.fold,
+            metrics=_score(actual, combined["point"], train, season_length),
+            forecast=np.asarray(combined["point"]),
+            actual=actual,
+            details={
+                "members": combined["members"],
+                "rule": combination_rule,
+                "mean_disagreement": combined["mean_disagreement"],
+                "uses_exogenous": False,
+            },
+        ))
+    else:
+        combination_note = (
+            f"Only {len(available)} member(s) produced a hold-out forecast, so no "
+            f"combination was formed. If the combination was the selected model, "
+            f"it has no hold-out score and that must be said rather than silently "
+            f"reporting the next model down."
+        )
+
     return {
         "scored_at": datetime.now(UTC).isoformat(),
         "selected_before_scoring": selected,
@@ -465,6 +506,7 @@ def run_holdout(
         "results": [r.as_dict() for r in results],
         "_result_objects": results,
         "summary": summarise(results),
+        "combination_note": combination_note,
         "holdout_scored": True,
         "warning": (
             None if selected else

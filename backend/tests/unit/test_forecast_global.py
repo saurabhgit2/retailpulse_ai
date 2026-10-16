@@ -225,3 +225,36 @@ def test_coverage_is_reported_against_what_was_promised():
     assert 0.0 <= coverage["observed"] <= 1.0
     assert coverage["verdict"]
     assert "own uncertainty" in coverage["caveat"]
+
+
+def test_the_combination_is_scored_on_the_holdout_too():
+    """The defect this guards against: cross-validation selected
+    `combination_median`, the hold-out table did not contain it, and no
+    prediction interval could be built for the one model that was chosen. A
+    protocol that cannot score its own choice is not a protocol."""
+    series = _series()
+    protocol = build_protocol(series, horizon=12, folds=3)
+
+    outcome = run_experiment(series, LOCAL, horizon=12, folds=3, protocol=protocol)
+    selected = outcome["summary"].iloc[0]["model"]
+
+    holdout = run_holdout(series, LOCAL, horizon=12, protocol=protocol, selected=selected)
+    scored = set(holdout["summary"]["model"])
+
+    assert "combination_median" in scored
+    assert selected in scored, f"the selected model {selected!r} was not scored"
+
+
+def test_an_interval_can_be_built_for_a_selected_combination():
+    series = _series()
+    protocol = build_protocol(series, horizon=12, folds=3)
+    outcome = run_experiment(series, LOCAL, horizon=12, folds=3, protocol=protocol)
+    holdout = run_holdout(series, LOCAL, horizon=12, protocol=protocol,
+                          selected="combination_median")
+
+    interval = build_intervals(
+        outcome["_fold_objects"], holdout["_result_objects"], "combination_median"
+    )
+
+    assert interval["available"] is True
+    assert len(interval["lower"]) == 12
