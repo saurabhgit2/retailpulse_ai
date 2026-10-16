@@ -32,7 +32,7 @@ source = "database"
 
 # Which dataset. Leave empty to use the most recently processed one, which is
 # convenient but not reproducible; fill it in before the run that gets cited.
-dataset_id = ""
+dataset_id = "a6a815d8-05de-476b-8429-32e0300a2506"
 
 # Only used when source = "csv".
 csv_path = "data/raw/online_retail_II.csv"
