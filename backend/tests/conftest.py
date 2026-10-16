@@ -146,7 +146,7 @@ def client(db_session, tmp_path, monkeypatch):
 
     from app.api.deps import get_db
     from app.main import create_app
-    from app.services import processing_service
+    from app.services import forecast_service, processing_service
 
     monkeypatch.setattr(get_settings(), "upload_dir", tmp_path / "uploads", raising=False)
 
@@ -156,6 +156,12 @@ def client(db_session, tmp_path, monkeypatch):
     # version of this file did.
     monkeypatch.setattr(
         processing_service, "_open_session", lambda: _SharedSession(db_session)
+    )
+    # The forecasting job has the same seam for the same reason: without it the
+    # run writes into a transaction these tests cannot see, and every status
+    # reads "queued" forever.
+    monkeypatch.setattr(
+        forecast_service, "_open_session", lambda: _SharedSession(db_session)
     )
 
     app = create_app()
