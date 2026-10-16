@@ -79,8 +79,12 @@ def weekly_series(
         "periods_from_query": int(len(series)),
     }
 
-    series, filled = _fill_period_gaps(series, granularity)
+    series, filled, gap_periods = _fill_period_gaps(series, granularity)
     meta["gaps_filled_with_zero"] = filled
+    # The dates, not just the count. A zero week that lands at the end of a
+    # fold's training window makes every last-value model forecast zero, and
+    # without the dates that shows up as an unexplained 100% error.
+    meta["gap_periods"] = [str(p.date()) for p in gap_periods]
     if filled:
         meta["gap_note"] = (
             f"{filled} period(s) had no rows at all and were filled with zero so the "
@@ -182,15 +186,25 @@ def _frequency(granularity: str) -> str:
     return {"day": "D", "week": "W-MON", "month": "MS", "year": "YS"}[granularity]
 
 
-def _fill_period_gaps(series: pd.Series, granularity: str) -> tuple[pd.Series, int]:
-    """Put the series on an even grid. Returns the series and how many were added."""
+def _fill_period_gaps(
+    series: pd.Series, granularity: str
+) -> tuple[pd.Series, int, list[pd.Timestamp]]:
+    """Put the series on an even grid.
+
+    Returns the series, how many periods were added, and **which ones**. The
+    dates matter: a closure week filled with zero that happens to be the last
+    observation of a fold's training window makes naive, ETS and drift forecast
+    zero for the whole horizon, which scores ~100% WAPE. Without the dates that
+    looks like the models failing rather than the calendar.
+    """
     if len(series) < 2:
-        return series, 0
+        return series, 0, []
     calendar = pd.date_range(series.index[0], series.index[-1], freq=_frequency(granularity))
     if len(calendar) == len(series):
-        return series, 0
+        return series, 0, []
+    missing = [stamp for stamp in calendar if stamp not in series.index]
     filled = series.reindex(calendar).fillna(0.0)
-    return filled, int(len(calendar) - len(series))
+    return filled, int(len(calendar) - len(series)), missing
 
 
 def _drop_incomplete_final(
