@@ -395,6 +395,8 @@ def _execute(session, run: ForecastRun, dataset: Dataset) -> None:
         panel=panel,
         global_factories=global_factories,
         target_series_id=TOTAL_SERIES_ID if panel is not None else None,
+        combination_rule=run.config["combination"]["rule"],
+        combination_members=run.config["combination"]["members"],
     )
     run.holdout_scored_at = datetime.fromisoformat(holdout["scored_at"])
     run.holdout_warning = holdout["warning"]

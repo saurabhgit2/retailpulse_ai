@@ -722,7 +722,11 @@ def main() -> int:
         panel=panel,
         global_factories=global_factories,
         target_series_id=TARGET_SERIES_ID if panel is not None else None,
+        combination_rule=combination.get("rule", "median"),
+        combination_members=combination.get("members") or None,
     )
+    if holdout.get("combination_note"):
+        print(f"  note: {holdout['combination_note']}")
     print("\nhold-out (scored once, after selection):")
     print(holdout["summary"].round(3).to_string(index=False))
 
