@@ -1,0 +1,2817 @@
+{
+  "meta": {
+    "name": "rq1-forecasting-weekly-total",
+    "research_question": "RQ1",
+    "description": "Compare baseline, statistical and learned forecasting families on weekly\nrevenue under one evaluation protocol, and test whether the observed ranking is\ndistinguishable from noise.",
+    "author": "Saurabh Singh"
+  },
+  "config_hash": "798b9ecf55bd6922212f23c413a3cdad2c8a20cc9d3f09fa157608eae91a53b3",
+  "run_at": "2026-10-16T02:10:01.264616+00:00",
+  "environment": {
+    "python": "3.12.1",
+    "numpy": "2.3.5",
+    "pandas": "2.3.3",
+    "scipy": "1.16.3",
+    "scikit-learn": "1.7.2",
+    "xgboost": "not installed"
+  },
+  "series": {
+    "available": true,
+    "granularity": "week",
+    "value_column": "net_revenue",
+    "periods_from_query": 104,
+    "gaps_filled_with_zero": 2,
+    "gap_periods": [
+      "2009-12-28",
+      "2010-12-27"
+    ],
+    "gap_note": "2 period(s) had no rows at all and were filled with zero so the series is evenly spaced, which every model here assumes. A zero from a closure is not the same as zero demand - see the closure calendar in the data-quality report before reading these as weak weeks.",
+    "incomplete_final_periods_dropped": 1,
+    "incomplete_note": "Dropped 1 incomplete period(s) at the end. A partial period looks like a collapse in demand and would be learned as one.",
+    "periods": 105,
+    "first_period": "2009-11-30",
+    "last_period": "2011-11-28",
+    "dataset_id": "a6a815d8-05de-476b-8429-32e0300a2506",
+    "dataset_name": "online_retail_II",
+    "pipeline_version": "1.0.0",
+    "clean_data_sha256": "6b60e3c0d2f660a05f9a5931270747ff599f63d122e1127165a45ca88c7bc7e2",
+    "panel": {
+      "available": true,
+      "series": 100,
+      "periods": 106,
+      "rows": 10600,
+      "value_column": "gross_revenue",
+      "product_limit": 100,
+      "selection_note": "The 100 products with the highest revenue under these filters. Results describe those products, not the whole catalogue; the long tail is mostly single sales and its exclusion is a survivorship bias worth stating (finding F5)."
+    }
+  },
+  "protocol": {
+    "horizon": 12,
+    "style": "expanding",
+    "observations": 105,
+    "folds": [
+      {
+        "fold": 1,
+        "style": "expanding",
+        "train_size": 57,
+        "horizon": 12,
+        "train_start": "2009-11-30",
+        "train_end": "2010-12-27",
+        "test_start": "2011-01-03",
+        "test_end": "2011-03-21"
+      },
+      {
+        "fold": 2,
+        "style": "expanding",
+        "train_size": 69,
+        "horizon": 12,
+        "train_start": "2009-11-30",
+        "train_end": "2011-03-21",
+        "test_start": "2011-03-28",
+        "test_end": "2011-06-13"
+      },
+      {
+        "fold": 3,
+        "style": "expanding",
+        "train_size": 81,
+        "horizon": 12,
+        "train_start": "2009-11-30",
+        "train_end": "2011-06-13",
+        "test_start": "2011-06-20",
+        "test_end": "2011-09-05"
+      }
+    ],
+    "holdout": {
+      "fold": 0,
+      "style": "expanding",
+      "train_size": 93,
+      "horizon": 12,
+      "train_start": "2009-11-30",
+      "train_end": "2011-09-05",
+      "test_start": "2011-09-12",
+      "test_end": "2011-11-28"
+    },
+    "notes": [
+      "Training windows expand: each fold uses all history before its origin. Chu & Zhang (2003) instead held the in-sample length fixed; with about two years of weekly data here, discarding early history would leave too little to estimate a yearly cycle."
+    ]
+  },
+  "primary_metric": "WAPE",
+  "summary": [
+    {
+      "model": "combination_median",
+      "mean_wape": 15.7556499328,
+      "sd_wape": 6.8798637435,
+      "worst_wape": 23.6878657526,
+      "folds_scored": 3,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "moving_average",
+      "mean_wape": 16.46663182,
+      "sd_wape": 6.9671617094,
+      "worst_wape": 24.2956824267,
+      "folds_scored": 3,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "seasonal_naive",
+      "mean_wape": 17.3011408179,
+      "sd_wape": 4.5728125192,
+      "worst_wape": 22.5533871384,
+      "folds_scored": 3,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "fourier",
+      "mean_wape": 18.5082697763,
+      "sd_wape": 8.9790414527,
+      "worst_wape": 28.7103004741,
+      "folds_scored": 3,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "gbt_global",
+      "mean_wape": 22.9234683789,
+      "sd_wape": 4.4048880567,
+      "worst_wape": 26.5905252908,
+      "folds_scored": 3,
+      "folds_failed": 0,
+      "uses_exogenous": true,
+      "first_error": null
+    },
+    {
+      "model": "naive",
+      "mean_wape": 46.4918268665,
+      "sd_wape": 46.5026716751,
+      "worst_wape": 100.0,
+      "folds_scored": 3,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "ets",
+      "mean_wape": 46.8889884307,
+      "sd_wape": 46.148408039,
+      "worst_wape": 100.0419529671,
+      "folds_scored": 3,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "seasonal_naive_drift",
+      "mean_wape": 53.9383977009,
+      "sd_wape": 59.3061722408,
+      "worst_wape": 122.0558627114,
+      "folds_scored": 3,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    }
+  ],
+  "significance": {
+    "omnibus": {
+      "available": true,
+      "test": "Friedman (non-parametric repeated measures)",
+      "statistic": 7.444444444444443,
+      "p_value": 0.3841146155460425,
+      "models": 8,
+      "blocks": 3,
+      "blocks_dropped": 0,
+      "mean_ranks": {
+        "combination_median": 2.6666666666666665,
+        "seasonal_naive": 3.0,
+        "moving_average": 3.0,
+        "fourier": 4.666666666666667,
+        "naive": 5.0,
+        "ets": 5.333333333333333,
+        "seasonal_naive_drift": 5.666666666666667,
+        "gbt_global": 6.666666666666667
+      },
+      "best_by_mean_rank": "combination_median",
+      "reject_null_at_05": false,
+      "interpretation": "No detectable difference between the models on this measure. With this many blocks that is as likely to mean too little evidence as genuine equivalence.",
+      "caveats": [
+        "With 3 blocks the chi-square approximation behind the p-value is approximate. Treat the result as indicative and report the number of blocks alongside it."
+      ],
+      "grounding": "Procedure follows Aras, Deveci Kocako\u00e7 & Polat (2017), who used Friedman's test on each error measure and then Bonferroni-corrected multiple comparisons to locate the differences."
+    },
+    "pairwise": [
+      {
+        "model_a": "naive",
+        "model_b": "seasonal_naive",
+        "mean_error_a": 46.49182686645173,
+        "mean_error_b": 17.301140817893884,
+        "mean_difference": 29.19068604855785,
+        "blocks_a_better": 0,
+        "blocks": 3,
+        "statistic": 0.0,
+        "p_value": 0.25,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "seasonal_naive"
+      },
+      {
+        "model_a": "naive",
+        "model_b": "seasonal_naive_drift",
+        "mean_error_a": 46.49182686645173,
+        "mean_error_b": 53.93839770089816,
+        "mean_difference": -7.446570834446422,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "naive"
+      },
+      {
+        "model_a": "naive",
+        "model_b": "moving_average",
+        "mean_error_a": 46.49182686645173,
+        "mean_error_b": 16.46663182001053,
+        "mean_difference": 30.02519504644121,
+        "blocks_a_better": 1,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "moving_average"
+      },
+      {
+        "model_a": "naive",
+        "model_b": "fourier",
+        "mean_error_a": 46.49182686645173,
+        "mean_error_b": 18.50826977634551,
+        "mean_difference": 27.98355709010622,
+        "blocks_a_better": 1,
+        "blocks": 3,
+        "statistic": 2.0,
+        "p_value": 0.75,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "fourier"
+      },
+      {
+        "model_a": "naive",
+        "model_b": "ets",
+        "mean_error_a": 46.49182686645173,
+        "mean_error_b": 46.8889884306696,
+        "mean_difference": -0.397161564217857,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "naive"
+      },
+      {
+        "model_a": "naive",
+        "model_b": "gbt_global",
+        "mean_error_a": 46.49182686645173,
+        "mean_error_b": 22.923468378878677,
+        "mean_difference": 23.56835848757306,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 3.0,
+        "p_value": 1.0,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "gbt_global"
+      },
+      {
+        "model_a": "naive",
+        "model_b": "combination_median",
+        "mean_error_a": 46.49182686645173,
+        "mean_error_b": 15.755649932812753,
+        "mean_difference": 30.736176933638987,
+        "blocks_a_better": 1,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "combination_median"
+      },
+      {
+        "model_a": "seasonal_naive",
+        "model_b": "seasonal_naive_drift",
+        "mean_error_a": 17.301140817893884,
+        "mean_error_b": 53.93839770089816,
+        "mean_difference": -36.63725688300428,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "seasonal_naive"
+      },
+      {
+        "model_a": "seasonal_naive",
+        "model_b": "moving_average",
+        "mean_error_a": 17.301140817893884,
+        "mean_error_b": 16.46663182001053,
+        "mean_difference": 0.8345089978833519,
+        "blocks_a_better": 1,
+        "blocks": 3,
+        "statistic": 2.0,
+        "p_value": 0.75,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "moving_average"
+      },
+      {
+        "model_a": "seasonal_naive",
+        "model_b": "fourier",
+        "mean_error_a": 17.301140817893884,
+        "mean_error_b": 18.50826977634551,
+        "mean_difference": -1.2071289584516294,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 2.0,
+        "p_value": 0.75,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "seasonal_naive"
+      },
+      {
+        "model_a": "seasonal_naive",
+        "model_b": "ets",
+        "mean_error_a": 17.301140817893884,
+        "mean_error_b": 46.8889884306696,
+        "mean_difference": -29.587847612775715,
+        "blocks_a_better": 3,
+        "blocks": 3,
+        "statistic": 0.0,
+        "p_value": 0.25,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "seasonal_naive"
+      },
+      {
+        "model_a": "seasonal_naive",
+        "model_b": "gbt_global",
+        "mean_error_a": 17.301140817893884,
+        "mean_error_b": 22.923468378878677,
+        "mean_difference": -5.622327560984796,
+        "blocks_a_better": 3,
+        "blocks": 3,
+        "statistic": 0.0,
+        "p_value": 0.25,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "seasonal_naive"
+      },
+      {
+        "model_a": "seasonal_naive",
+        "model_b": "combination_median",
+        "mean_error_a": 17.301140817893884,
+        "mean_error_b": 15.755649932812753,
+        "mean_difference": 1.5454908850811304,
+        "blocks_a_better": 1,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "combination_median"
+      },
+      {
+        "model_a": "seasonal_naive_drift",
+        "model_b": "moving_average",
+        "mean_error_a": 53.93839770089816,
+        "mean_error_b": 16.46663182001053,
+        "mean_difference": 37.47176588088763,
+        "blocks_a_better": 0,
+        "blocks": 3,
+        "statistic": 0.0,
+        "p_value": 0.25,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "moving_average"
+      },
+      {
+        "model_a": "seasonal_naive_drift",
+        "model_b": "fourier",
+        "mean_error_a": 53.93839770089816,
+        "mean_error_b": 18.50826977634551,
+        "mean_difference": 35.43012792455264,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 3.0,
+        "p_value": 1.0,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "fourier"
+      },
+      {
+        "model_a": "seasonal_naive_drift",
+        "model_b": "ets",
+        "mean_error_a": 53.93839770089816,
+        "mean_error_b": 46.8889884306696,
+        "mean_difference": 7.049409270228565,
+        "blocks_a_better": 1,
+        "blocks": 3,
+        "statistic": 2.0,
+        "p_value": 0.75,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "ets"
+      },
+      {
+        "model_a": "seasonal_naive_drift",
+        "model_b": "gbt_global",
+        "mean_error_a": 53.93839770089816,
+        "mean_error_b": 22.923468378878677,
+        "mean_difference": 31.01492932201948,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 3.0,
+        "p_value": 1.0,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "gbt_global"
+      },
+      {
+        "model_a": "seasonal_naive_drift",
+        "model_b": "combination_median",
+        "mean_error_a": 53.93839770089816,
+        "mean_error_b": 15.755649932812753,
+        "mean_difference": 38.182747768085406,
+        "blocks_a_better": 0,
+        "blocks": 3,
+        "statistic": 0.0,
+        "p_value": 0.25,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "combination_median"
+      },
+      {
+        "model_a": "moving_average",
+        "model_b": "fourier",
+        "mean_error_a": 16.46663182001053,
+        "mean_error_b": 18.50826977634551,
+        "mean_difference": -2.041637956334981,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "moving_average"
+      },
+      {
+        "model_a": "moving_average",
+        "model_b": "ets",
+        "mean_error_a": 16.46663182001053,
+        "mean_error_b": 46.8889884306696,
+        "mean_difference": -30.422356610659065,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "moving_average"
+      },
+      {
+        "model_a": "moving_average",
+        "model_b": "gbt_global",
+        "mean_error_a": 16.46663182001053,
+        "mean_error_b": 22.923468378878677,
+        "mean_difference": -6.456836558868147,
+        "blocks_a_better": 3,
+        "blocks": 3,
+        "statistic": 0.0,
+        "p_value": 0.25,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "moving_average"
+      },
+      {
+        "model_a": "moving_average",
+        "model_b": "combination_median",
+        "mean_error_a": 16.46663182001053,
+        "mean_error_b": 15.755649932812753,
+        "mean_difference": 0.7109818871977787,
+        "blocks_a_better": 1,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "combination_median"
+      },
+      {
+        "model_a": "fourier",
+        "model_b": "ets",
+        "mean_error_a": 18.50826977634551,
+        "mean_error_b": 46.8889884306696,
+        "mean_difference": -28.38071865432408,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 2.0,
+        "p_value": 0.75,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "fourier"
+      },
+      {
+        "model_a": "fourier",
+        "model_b": "gbt_global",
+        "mean_error_a": 18.50826977634551,
+        "mean_error_b": 22.923468378878677,
+        "mean_difference": -4.415198602533166,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "fourier"
+      },
+      {
+        "model_a": "fourier",
+        "model_b": "combination_median",
+        "mean_error_a": 18.50826977634551,
+        "mean_error_b": 15.755649932812753,
+        "mean_difference": 2.75261984353276,
+        "blocks_a_better": 1,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "combination_median"
+      },
+      {
+        "model_a": "ets",
+        "model_b": "gbt_global",
+        "mean_error_a": 46.8889884306696,
+        "mean_error_b": 22.923468378878677,
+        "mean_difference": 23.965520051790914,
+        "blocks_a_better": 2,
+        "blocks": 3,
+        "statistic": 3.0,
+        "p_value": 1.0,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "gbt_global"
+      },
+      {
+        "model_a": "ets",
+        "model_b": "combination_median",
+        "mean_error_a": 46.8889884306696,
+        "mean_error_b": 15.755649932812753,
+        "mean_difference": 31.13333849785684,
+        "blocks_a_better": 1,
+        "blocks": 3,
+        "statistic": 1.0,
+        "p_value": 0.5,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "combination_median"
+      },
+      {
+        "model_a": "gbt_global",
+        "model_b": "combination_median",
+        "mean_error_a": 22.923468378878677,
+        "mean_error_b": 15.755649932812753,
+        "mean_difference": 7.167818446065926,
+        "blocks_a_better": 0,
+        "blocks": 3,
+        "statistic": 0.0,
+        "p_value": 0.25,
+        "p_value_bonferroni": 1.0,
+        "significant": false,
+        "better": "combination_median"
+      }
+    ],
+    "significant_pairs": 0,
+    "comparisons": 28,
+    "alpha": 0.05,
+    "correction": "Bonferroni",
+    "summary": "Friedman's test does not reject the null (p = 0.384) across 3 blocks, so the differences between these 8 models are not distinguishable from noise. 'combination_median' has the best mean rank, but that ranking should not be presented as a finding."
+  },
+  "combination": {
+    "rule": "median",
+    "members": [
+      "seasonal_naive",
+      "seasonal_naive_drift",
+      "moving_average",
+      "fourier",
+      "ets"
+    ],
+    "notes": []
+  },
+  "selection": {
+    "selected_model": "combination_median",
+    "holdout_scored_at": "2026-10-16T02:09:53.638032+00:00",
+    "warning": null
+  },
+  "holdout": [
+    {
+      "model": "seasonal_naive",
+      "mean_wape": 14.8284149892,
+      "sd_wape": null,
+      "worst_wape": 14.8284149892,
+      "folds_scored": 1,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "fourier",
+      "mean_wape": 18.5194253967,
+      "sd_wape": null,
+      "worst_wape": 18.5194253967,
+      "folds_scored": 1,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "naive",
+      "mean_wape": 33.6490155684,
+      "sd_wape": null,
+      "worst_wape": 33.6490155684,
+      "folds_scored": 1,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "seasonal_naive_drift",
+      "mean_wape": 35.3989503936,
+      "sd_wape": null,
+      "worst_wape": 35.3989503936,
+      "folds_scored": 1,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "combination_median",
+      "mean_wape": 35.5981835328,
+      "sd_wape": null,
+      "worst_wape": 35.5981835328,
+      "folds_scored": 1,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "ets",
+      "mean_wape": 36.5996934487,
+      "sd_wape": null,
+      "worst_wape": 36.5996934487,
+      "folds_scored": 1,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    },
+    {
+      "model": "gbt_global",
+      "mean_wape": 41.5227502786,
+      "sd_wape": null,
+      "worst_wape": 41.5227502786,
+      "folds_scored": 1,
+      "folds_failed": 0,
+      "uses_exogenous": true,
+      "first_error": null
+    },
+    {
+      "model": "moving_average",
+      "mean_wape": 41.7817858409,
+      "sd_wape": null,
+      "worst_wape": 41.7817858409,
+      "folds_scored": 1,
+      "folds_failed": 0,
+      "uses_exogenous": false,
+      "first_error": null
+    }
+  ],
+  "global_models": {
+    "requested": [
+      "gbt_global"
+    ],
+    "target_series_id": "__TOTAL__",
+    "panel_series": 101,
+    "notes": []
+  },
+  "intervals": {
+    "available": true,
+    "model": "combination_median",
+    "level": 0.8,
+    "method": "empirical quantiles of backtest errors, by horizon step",
+    "errors_used": 36,
+    "notes": [
+      "Horizon steps [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] had fewer than 5 backtest errors of their own, so their intervals use the pooled error distribution across all steps. They are wider at short horizons than the data strictly implies."
+    ],
+    "point": [
+      177049.79382785916,
+      183789.89369565216,
+      183038.06054347826,
+      182286.22739130433,
+      181534.39423913043,
+      180782.56108695653,
+      180030.7279347826,
+      179278.8947826087,
+      178527.0616304348,
+      177775.22847826086,
+      177055.0784586104,
+      177055.20559652083
+    ],
+    "lower": [
+      142734.05795285915,
+      149474.15782065218,
+      148722.32466847828,
+      147970.49151630432,
+      147218.65836413042,
+      146466.82521195651,
+      145714.9920597826,
+      144963.1589076087,
+      144211.3257554348,
+      143459.49260326085,
+      142739.34258361039,
+      142739.46972152084
+    ],
+    "upper": [
+      226773.27222164208,
+      233513.37208943508,
+      232761.53893726118,
+      232009.70578508725,
+      231257.87263291335,
+      230506.03948073945,
+      229754.20632856552,
+      229002.37317639161,
+      228250.5400242177,
+      227498.70687204378,
+      226778.55685239332,
+      226778.68399030375
+    ],
+    "actual": [
+      222269.79,
+      319745.94,
+      202358.81999999998,
+      300307.48000000004,
+      204251.49,
+      259053.85000000003,
+      234202.83000000002,
+      288361.13,
+      350123.39999999997,
+      369129.47,
+      295233.31,
+      306115.06
+    ],
+    "coverage": {
+      "available": true,
+      "nominal": 0.8,
+      "observed": 0.25,
+      "points": 12,
+      "mean_width": 84039.21426878292,
+      "verdict": "too narrow - the interval understates the uncertainty",
+      "caveat": "Observed coverage is itself estimated from 12 points, so it carries its own uncertainty; do not read a gap of a few percentage points as a finding."
+    },
+    "sizing_note": "Sized on cross-validation errors and checked against the hold-out. Sizing on the hold-out itself would guarantee good coverage and demonstrate nothing."
+  },
+  "feature_importance": {
+    "available": true,
+    "training_rows": 4141,
+    "validation_rows": 1111,
+    "permutation_importance": {
+      "available": true,
+      "method": "permutation importance, 10 shuffles per feature",
+      "scoring": "mae",
+      "baseline_score": 1666.1628653325056,
+      "rows": [
+        {
+          "feature": "roll_mean_12",
+          "importance": 867.901638526356,
+          "std_dev": 23.396627825655198,
+          "relative": 0.5208984407134499,
+          "rank": 1
+        },
+        {
+          "feature": "lag_4",
+          "importance": 614.6550206016709,
+          "std_dev": 17.40183409324213,
+          "relative": 0.3689045251161615,
+          "rank": 2
+        },
+        {
+          "feature": "lag_52",
+          "importance": 588.2469923459203,
+          "std_dev": 16.146639761297724,
+          "relative": 0.3530549171305217,
+          "rank": 3
+        },
+        {
+          "feature": "roll_std_12",
+          "importance": 456.92110938705156,
+          "std_dev": 19.52345732641275,
+          "relative": 0.27423556177736963,
+          "rank": 4
+        },
+        {
+          "feature": "lag_8",
+          "importance": 368.5682840643218,
+          "std_dev": 5.442067724345376,
+          "relative": 0.2212078373207345,
+          "rank": 5
+        },
+        {
+          "feature": "lag_12",
+          "importance": 295.5263897309878,
+          "std_dev": 5.335584512231301,
+          "relative": 0.17736944921768583,
+          "rank": 6
+        },
+        {
+          "feature": "roll_mean_4",
+          "importance": 65.7719619953867,
+          "std_dev": 7.592137135337041,
+          "relative": 0.039475109765011486,
+          "rank": 7
+        },
+        {
+          "feature": "lag_3",
+          "importance": 46.36436163957596,
+          "std_dev": 2.889335540672313,
+          "relative": 0.0278270285602142,
+          "rank": 8
+        },
+        {
+          "feature": "lag_2",
+          "importance": 40.989517761516666,
+          "std_dev": 4.450171311837946,
+          "relative": 0.024601147111351956,
+          "rank": 9
+        },
+        {
+          "feature": "week_cos",
+          "importance": 0.038437354923394194,
+          "std_dev": 2.272522638992429,
+          "relative": 2.306938638662043e-05,
+          "rank": 10
+        },
+        {
+          "feature": "week_of_year",
+          "importance": 0.0,
+          "std_dev": 0.0,
+          "relative": 0.0,
+          "rank": 11
+        },
+        {
+          "feature": "month",
+          "importance": 0.0,
+          "std_dev": 0.0,
+          "relative": 0.0,
+          "rank": 12
+        },
+        {
+          "feature": "quarter",
+          "importance": 0.0,
+          "std_dev": 0.0,
+          "relative": 0.0,
+          "rank": 13
+        },
+        {
+          "feature": "day_of_week",
+          "importance": 0.0,
+          "std_dev": 0.0,
+          "relative": 0.0,
+          "rank": 14
+        },
+        {
+          "feature": "is_month_end",
+          "importance": 0.0,
+          "std_dev": 0.0,
+          "relative": 0.0,
+          "rank": 15
+        },
+        {
+          "feature": "lag_1",
+          "importance": -0.9095537206593918,
+          "std_dev": 2.6078651598666354,
+          "relative": -0.000545897246652342,
+          "rank": 16
+        },
+        {
+          "feature": "roll_std_4",
+          "importance": -16.31548591641383,
+          "std_dev": 2.520688380855246,
+          "relative": -0.009792251559488365,
+          "rank": 17
+        },
+        {
+          "feature": "week_sin",
+          "importance": -30.47639699121737,
+          "std_dev": 5.041505719230731,
+          "relative": -0.018291367323887264,
+          "rank": 18
+        }
+      ],
+      "correlated_features": [
+        {
+          "features": [
+            "roll_mean_4",
+            "roll_mean_12"
+          ],
+          "correlation": 0.9978130022803903
+        },
+        {
+          "features": [
+            "week_of_year",
+            "week_cos"
+          ],
+          "correlation": 0.997732733266748
+        },
+        {
+          "features": [
+            "roll_mean_4",
+            "roll_std_12"
+          ],
+          "correlation": 0.991429691382807
+        },
+        {
+          "features": [
+            "lag_1",
+            "roll_mean_12"
+          ],
+          "correlation": 0.9882245495292212
+        },
+        {
+          "features": [
+            "lag_2",
+            "roll_mean_4"
+          ],
+          "correlation": 0.9879465720530477
+        },
+        {
+          "features": [
+            "lag_12",
+            "roll_mean_12"
+          ],
+          "correlation": 0.9872360172378897
+        },
+        {
+          "features": [
+            "lag_1",
+            "roll_mean_4"
+          ],
+          "correlation": 0.9868718144108755
+        },
+        {
+          "features": [
+            "lag_52",
+            "roll_mean_12"
+          ],
+          "correlation": 0.9865916482386907
+        },
+        {
+          "features": [
+            "lag_3",
+            "roll_mean_4"
+          ],
+          "correlation": 0.9862775698954914
+        },
+        {
+          "features": [
+            "lag_12",
+            "roll_mean_4"
+          ],
+          "correlation": 0.9861784974246628
+        },
+        {
+          "features": [
+            "roll_mean_12",
+            "roll_std_12"
+          ],
+          "correlation": 0.985576931443878
+        },
+        {
+          "features": [
+            "lag_1",
+            "lag_52"
+          ],
+          "correlation": 0.98543689944398
+        },
+        {
+          "features": [
+            "lag_52",
+            "roll_mean_4"
+          ],
+          "correlation": 0.9848494758711005
+        },
+        {
+          "features": [
+            "lag_2",
+            "roll_mean_12"
+          ],
+          "correlation": 0.9835549507636856
+        },
+        {
+          "features": [
+            "lag_3",
+            "roll_mean_12"
+          ],
+          "correlation": 0.9827177409772637
+        },
+        {
+          "features": [
+            "lag_12",
+            "lag_52"
+          ],
+          "correlation": 0.9820784576471052
+        },
+        {
+          "features": [
+            "lag_3",
+            "roll_std_12"
+          ],
+          "correlation": 0.9812761247048795
+        },
+        {
+          "features": [
+            "lag_4",
+            "roll_mean_4"
+          ],
+          "correlation": 0.9805475163838094
+        },
+        {
+          "features": [
+            "lag_2",
+            "roll_std_12"
+          ],
+          "correlation": 0.9799506273206052
+        },
+        {
+          "features": [
+            "lag_8",
+            "lag_52"
+          ],
+          "correlation": 0.9795498275779311
+        },
+        {
+          "features": [
+            "lag_8",
+            "roll_mean_12"
+          ],
+          "correlation": 0.9785714462946501
+        },
+        {
+          "features": [
+            "lag_1",
+            "roll_std_12"
+          ],
+          "correlation": 0.9783881867072225
+        },
+        {
+          "features": [
+            "lag_4",
+            "roll_mean_12"
+          ],
+          "correlation": 0.9781106845823916
+        },
+        {
+          "features": [
+            "lag_3",
+            "lag_12"
+          ],
+          "correlation": 0.975701386426259
+        },
+        {
+          "features": [
+            "lag_4",
+            "lag_12"
+          ],
+          "correlation": 0.9752930477799074
+        },
+        {
+          "features": [
+            "lag_1",
+            "lag_3"
+          ],
+          "correlation": 0.975093312462322
+        },
+        {
+          "features": [
+            "lag_52",
+            "roll_std_12"
+          ],
+          "correlation": 0.9748871880505102
+        },
+        {
+          "features": [
+            "lag_1",
+            "lag_12"
+          ],
+          "correlation": 0.9743202361454059
+        },
+        {
+          "features": [
+            "lag_1",
+            "lag_8"
+          ],
+          "correlation": 0.9732256540292528
+        },
+        {
+          "features": [
+            "lag_8",
+            "roll_mean_4"
+          ],
+          "correlation": 0.9713327249131014
+        },
+        {
+          "features": [
+            "lag_2",
+            "lag_4"
+          ],
+          "correlation": 0.9705660673177973
+        },
+        {
+          "features": [
+            "lag_12",
+            "roll_std_12"
+          ],
+          "correlation": 0.9705598800930147
+        },
+        {
+          "features": [
+            "lag_2",
+            "lag_52"
+          ],
+          "correlation": 0.9688653821600325
+        },
+        {
+          "features": [
+            "lag_3",
+            "lag_52"
+          ],
+          "correlation": 0.9684795591620623
+        },
+        {
+          "features": [
+            "lag_4",
+            "roll_std_12"
+          ],
+          "correlation": 0.9680270794499436
+        },
+        {
+          "features": [
+            "lag_2",
+            "roll_std_4"
+          ],
+          "correlation": 0.9653382807709416
+        },
+        {
+          "features": [
+            "lag_1",
+            "lag_2"
+          ],
+          "correlation": 0.9649451436653258
+        },
+        {
+          "features": [
+            "roll_mean_4",
+            "roll_std_4"
+          ],
+          "correlation": 0.9642921875047477
+        },
+        {
+          "features": [
+            "lag_2",
+            "lag_12"
+          ],
+          "correlation": 0.9629302091793123
+        },
+        {
+          "features": [
+            "lag_8",
+            "lag_12"
+          ],
+          "correlation": 0.9611264744389336
+        },
+        {
+          "features": [
+            "roll_std_4",
+            "roll_std_12"
+          ],
+          "correlation": 0.9610273307672816
+        },
+        {
+          "features": [
+            "lag_1",
+            "roll_std_4"
+          ],
+          "correlation": 0.9590344029397079
+        },
+        {
+          "features": [
+            "lag_2",
+            "lag_3"
+          ],
+          "correlation": 0.9584920172451628
+        },
+        {
+          "features": [
+            "lag_12",
+            "roll_std_4"
+          ],
+          "correlation": 0.9584500444343925
+        },
+        {
+          "features": [
+            "lag_4",
+            "lag_52"
+          ],
+          "correlation": 0.956845980385435
+        },
+        {
+          "features": [
+            "lag_2",
+            "lag_8"
+          ],
+          "correlation": 0.9564122545550983
+        },
+        {
+          "features": [
+            "lag_3",
+            "lag_4"
+          ],
+          "correlation": 0.9543284840774922
+        },
+        {
+          "features": [
+            "roll_std_4",
+            "roll_mean_12"
+          ],
+          "correlation": 0.9537269967456359
+        },
+        {
+          "features": [
+            "lag_4",
+            "lag_8"
+          ],
+          "correlation": 0.9535100927829477
+        },
+        {
+          "features": [
+            "lag_8",
+            "roll_std_12"
+          ],
+          "correlation": 0.9527904093392403
+        },
+        {
+          "features": [
+            "lag_52",
+            "roll_std_4"
+          ],
+          "correlation": 0.95000711587147
+        },
+        {
+          "features": [
+            "lag_3",
+            "roll_std_4"
+          ],
+          "correlation": 0.9454689389138062
+        },
+        {
+          "features": [
+            "lag_1",
+            "lag_4"
+          ],
+          "correlation": 0.945346291912622
+        },
+        {
+          "features": [
+            "lag_3",
+            "lag_8"
+          ],
+          "correlation": 0.9434004068511491
+        },
+        {
+          "features": [
+            "week_of_year",
+            "month"
+          ],
+          "correlation": 0.9341987329938269
+        },
+        {
+          "features": [
+            "month",
+            "week_cos"
+          ],
+          "correlation": 0.931594939775605
+        },
+        {
+          "features": [
+            "lag_4",
+            "roll_std_4"
+          ],
+          "correlation": 0.9280637552058886
+        },
+        {
+          "features": [
+            "lag_8",
+            "roll_std_4"
+          ],
+          "correlation": 0.9122580852886568
+        },
+        {
+          "features": [
+            "week_of_year",
+            "week_sin"
+          ],
+          "correlation": 0.9115258125928141
+        }
+      ],
+      "caveats": [
+        "Measured on held-out rows, not training rows: training-set permutation importance reports what the model memorised.",
+        "Permutation importance understates both members of a correlated pair, because shuffling one leaves the other to carry the signal. Lag features are strongly correlated by construction - see `correlated_features` before reading a low score as 'irrelevant'."
+      ]
+    },
+    "agreement_with_mutual_information": {
+      "available": true,
+      "features_compared": 18,
+      "spearman_rho": 0.4496830162156978,
+      "p_value": 0.061160419561401835,
+      "top_k": 10,
+      "top_k_overlap": [
+        "lag_2",
+        "lag_3",
+        "lag_4",
+        "lag_52",
+        "lag_8",
+        "roll_mean_12",
+        "roll_mean_4",
+        "roll_std_12"
+      ],
+      "top_k_overlap_count": 8,
+      "model_top": [
+        "lag_12",
+        "lag_2",
+        "lag_3",
+        "lag_4",
+        "lag_52",
+        "lag_8",
+        "roll_mean_12",
+        "roll_mean_4",
+        "roll_std_12",
+        "week_cos"
+      ],
+      "information_top": [
+        "lag_1",
+        "lag_2",
+        "lag_3",
+        "lag_4",
+        "lag_52",
+        "lag_8",
+        "roll_mean_12",
+        "roll_mean_4",
+        "roll_std_12",
+        "roll_std_4"
+      ],
+      "verdict": "The rankings agree only weakly. Neither 'MI works' nor 'MI fails' is supportable from this; report the number and move on.",
+      "caveats": [],
+      "grounding_note": "The entropy / mutual-information approach to feature analysis has no support in the seventeen supplied papers. This comparison is what makes it defensible: it shows empirically how the model-free screen relates to a standard model-based method, rather than asserting that it works."
+    }
+  },
+  "fold_results": [
+    {
+      "model": "naive",
+      "fold": 1,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 133913.56583333333,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 135436.87088170665,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 100.0,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 200.0,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 100.0,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 133913.56583333333,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 3.260610002794572,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "naive",
+        "label": "Naive (last value)",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 1
+      }
+    },
+    {
+      "model": "seasonal_naive",
+      "fold": 1,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 20281.440833333334,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 23110.81046300573,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 15.200816316341356,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 14.258918784760969,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 15.145172714297884,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": -12592.4525,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.493825016462911,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "seasonal_naive",
+        "label": "Seasonal naive",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 1,
+        "season_length": 52,
+        "fell_back_to_naive": false
+      }
+    },
+    {
+      "model": "seasonal_naive_drift",
+      "fold": 1,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 163449.35806547618,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 165475.82315845188,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 122.36132209502402,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 200.0,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 122.05586271140191,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 163449.35806547618,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 3.9797656685651814,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "seasonal_naive_drift",
+        "label": "Seasonal naive with drift",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 2,
+        "season_length": 52,
+        "drift_per_season": -4543.968035714285,
+        "fell_back": true,
+        "fallback_note": "Fewer than two seasons of 52 periods, so the year-on-year drift could not be measured; used the trend over the available history instead."
+      }
+    },
+    {
+      "model": "moving_average",
+      "fold": 1,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 18956.112499999985,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 23206.89951092292,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 15.033019053065702,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 13.849112084247631,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 14.155483338851912,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": -11325.07416666665,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.46155510569052444,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "moving_average",
+        "label": "Moving average",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 4,
+        "window": 4
+      }
+    },
+    {
+      "model": "fourier",
+      "fold": 1,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 15810.63151524287,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 21593.522875874547,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 10.964101078268763,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 11.8124447739849,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 11.806594363203297,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 10706.459835820177,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.38496699679598684,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "fourier",
+        "label": "Linear trend + Fourier terms",
+        "family": "statistical",
+        "uses_exogenous": false,
+        "min_observations": 6,
+        "season_length": 52,
+        "harmonics": 2,
+        "ridge": 1e-06,
+        "intercept": 171664.55920597183,
+        "trend_per_period": 12.991182789177877,
+        "literature_note": "Chu & Zhang (2003) found trigonometric models were not useful for aggregate retail sales. This model is included as a hypothesis under test, not as a method the supplied literature endorses."
+      }
+    },
+    {
+      "model": "ets",
+      "fold": 1,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 133969.74654755447,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 135492.05021584735,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 100.04296753007418,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 200.0,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 100.04195296710346,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 133969.74654755447,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 3.2619779254364167,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "ets",
+        "label": "ETS (damped trend)",
+        "family": "statistical",
+        "uses_exogenous": false,
+        "min_observations": 5,
+        "seasonal": false,
+        "season_length": 1,
+        "parameters": {
+          "alpha": 0.9999,
+          "beta": 0.0001,
+          "phi": 0.8,
+          "gamma": 0.0
+        },
+        "converged": true,
+        "trend_half_life_periods": 3.1062837195053903
+      }
+    },
+    {
+      "model": "naive",
+      "fold": 2,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 36441.160833333335,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 42568.58611315127,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 24.886740624922528,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 24.34801052271305,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 23.630686337116533,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 10974.992499999998,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 1.3805691904618844,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "naive",
+        "label": "Naive (last value)",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 1
+      }
+    },
+    {
+      "model": "seasonal_naive",
+      "fold": 2,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 34779.844999999994,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 44804.767302936634,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 26.595931868455963,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 23.140333936130887,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 22.553387138445686,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 3508.523333333331,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 1.3176304310294855,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "seasonal_naive",
+        "label": "Seasonal naive",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 1,
+        "season_length": 52,
+        "fell_back_to_naive": false
+      }
+    },
+    {
+      "model": "seasonal_naive_drift",
+      "fold": 2,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 40066.112794117646,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 48653.43243406386,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 25.536396318765014,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 26.95917374232501,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 25.981327777003237,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 21606.891470588234,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 1.5179000789275867,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "seasonal_naive_drift",
+        "label": "Seasonal naive with drift",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 2,
+        "season_length": 52,
+        "drift_per_season": -1635.6767647058823,
+        "fell_back": true,
+        "fallback_note": "Fewer than two seasons of 52 periods, so the year-on-year drift could not be measured; used the trend over the available history instead."
+      }
+    },
+    {
+      "model": "moving_average",
+      "fold": 2,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 37466.65916666667,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 44553.359557030315,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 24.53363131040914,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 25.06124725730349,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 24.295682426705127,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 17127.982499999987,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 1.419420076973024,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "moving_average",
+        "label": "Moving average",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 4,
+        "window": 4
+      }
+    },
+    {
+      "model": "fourier",
+      "fold": 2,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 44274.49386044425,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 50385.1220330099,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 35.21215290065403,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 28.77188867418688,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 28.710300474120455,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": -16764.046004713706,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 1.6773341120108352,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "fourier",
+        "label": "Linear trend + Fourier terms",
+        "family": "statistical",
+        "uses_exogenous": false,
+        "min_observations": 6,
+        "season_length": 52,
+        "harmonics": 2,
+        "ridge": 1e-06,
+        "intercept": 168098.57808430772,
+        "trend_per_period": 152.09711161416627,
+        "literature_note": "Chu & Zhang (2003) found trigonometric models were not useful for aggregate retail sales. This model is included as a hypothesis under test, not as a method the supplied literature endorses."
+      }
+    },
+    {
+      "model": "ets",
+      "fold": 2,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 36379.68099238407,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 42474.9590979276,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 24.90784742335487,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 24.305520705581994,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 23.590819033103568,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 10606.515726083117,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 1.3782400337526006,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "ets",
+        "label": "ETS (damped trend)",
+        "family": "statistical",
+        "uses_exogenous": false,
+        "min_observations": 5,
+        "seasonal": false,
+        "season_length": 1,
+        "parameters": {
+          "alpha": 0.9458505935378,
+          "beta": 0.0001,
+          "phi": 0.8,
+          "gamma": 0.0
+        },
+        "converged": true,
+        "trend_half_life_periods": 3.1062837195053903
+      }
+    },
+    {
+      "model": "naive",
+      "fold": 3,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 25011.478333333343,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 31963.818180104576,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 17.922107734802786,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 15.492903852205957,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 15.844794262238675,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": -24417.98000000001,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.8374837453095929,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "naive",
+        "label": "Naive (last value)",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 1
+      }
+    },
+    {
+      "model": "seasonal_naive",
+      "fold": 3,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 22422.7975,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 28405.49833507488,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 13.77569202548227,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 14.67697866473879,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 14.204862600938077,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 12852.047500000006,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.7508044178896758,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "seasonal_naive",
+        "label": "Seasonal naive",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 1,
+        "season_length": 52,
+        "fell_back_to_naive": false
+      }
+    },
+    {
+      "model": "seasonal_naive_drift",
+      "fold": 3,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 21748.986333333338,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 28961.41936204377,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 15.685970459875797,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 13.689105548766065,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 13.77800261428932,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": -18552.44012500001,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.7282425408198442,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "seasonal_naive_drift",
+        "label": "Seasonal naive with drift",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 2,
+        "season_length": 52,
+        "drift_per_season": -902.3907499999998,
+        "fell_back": true,
+        "fallback_note": "Fewer than two seasons of 52 periods, so the year-on-year drift could not be measured; used the trend over the available history instead."
+      }
+    },
+    {
+      "model": "moving_average",
+      "fold": 3,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 17282.895000000004,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 22293.062029707427,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 12.189268989888445,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 11.160977533524273,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 10.948729694474551,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": -8457.69999999998,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.5787000448950845,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "moving_average",
+        "label": "Moving average",
+        "family": "baseline",
+        "uses_exogenous": false,
+        "min_observations": 4,
+        "window": 4
+      }
+    },
+    {
+      "model": "fourier",
+      "fold": 3,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 23690.438760229034,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 29549.979144416055,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 14.650784394621782,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 15.010236886483549,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 15.007914491712782,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 6122.119685421038,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.7932500876808423,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "fourier",
+        "label": "Linear trend + Fourier terms",
+        "family": "statistical",
+        "uses_exogenous": false,
+        "min_observations": 6,
+        "season_length": 52,
+        "harmonics": 2,
+        "ridge": 1e-06,
+        "intercept": 170036.12271855355,
+        "trend_per_period": 60.99286259026778,
+        "literature_note": "Chu & Zhang (2003) found trigonometric models were not useful for aggregate retail sales. This model is included as a hypothesis under test, not as a method the supplied literature endorses."
+      }
+    },
+    {
+      "model": "ets",
+      "fold": 3,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 26888.980026649846,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 33801.1154581076,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 19.183718814141194,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 16.502317150483844,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 17.034193291801756,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": -26779.158006216585,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.9003499673292752,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "ets",
+        "label": "ETS (damped trend)",
+        "family": "statistical",
+        "uses_exogenous": false,
+        "min_observations": 5,
+        "seasonal": false,
+        "season_length": 1,
+        "parameters": {
+          "alpha": 0.8613588263824999,
+          "beta": 0.0001,
+          "phi": 0.8,
+          "gamma": 0.0
+        },
+        "converged": true,
+        "trend_half_life_periods": 3.1062837195053903
+      }
+    },
+    {
+      "model": "gbt_global",
+      "fold": 1,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 24154.622253958853,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 37204.08245632541,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 17.530189787172638,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 22.676127544721115,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 18.03747223341159,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 18486.64004047793,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.5881316238939118,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "gbt_global",
+        "label": "Gradient-boosted trees (global)",
+        "family": "tree",
+        "uses_exogenous": true,
+        "implementation": "sklearn.HistGradientBoostingRegressor",
+        "parameters": {
+          "max_depth": 4,
+          "learning_rate": 0.05,
+          "max_iter": 300,
+          "min_samples_leaf": 20,
+          "l2_regularization": 1.0,
+          "early_stopping": false,
+          "random_state": 20260101
+        },
+        "feature_spec": {
+          "lags": [
+            1,
+            2,
+            3,
+            4,
+            8,
+            12,
+            52
+          ],
+          "rolling_windows": [
+            4,
+            12
+          ],
+          "calendar": true,
+          "horizon": 1
+        },
+        "scaled_per_series": true,
+        "training_rows_per_step": {
+          "1": 404,
+          "2": 303,
+          "3": 202,
+          "4": 101,
+          "5": 0,
+          "6": 0,
+          "7": 0,
+          "8": 0,
+          "9": 0,
+          "10": 0,
+          "11": 0,
+          "12": 0
+        },
+        "steps_without_a_model": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "deviation_note": "\u00a713.2 specifies XGBoost. This is the same model family from scikit-learn, which is already a dependency; the XGBoost variant runs as well when the optional package is installed."
+      }
+    },
+    {
+      "model": "gbt_global",
+      "fold": 2,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 41005.56348384427,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 48518.0254440991,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 29.326901186746056,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 27.379756248574942,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 26.590525290761114,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 5592.754553580399,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 1.5534910603490233,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "gbt_global",
+        "label": "Gradient-boosted trees (global)",
+        "family": "tree",
+        "uses_exogenous": true,
+        "implementation": "sklearn.HistGradientBoostingRegressor",
+        "parameters": {
+          "max_depth": 4,
+          "learning_rate": 0.05,
+          "max_iter": 300,
+          "min_samples_leaf": 20,
+          "l2_regularization": 1.0,
+          "early_stopping": false,
+          "random_state": 20260101
+        },
+        "feature_spec": {
+          "lags": [
+            1,
+            2,
+            3,
+            4,
+            8,
+            12,
+            52
+          ],
+          "rolling_windows": [
+            4,
+            12
+          ],
+          "calendar": true,
+          "horizon": 1
+        },
+        "scaled_per_series": true,
+        "training_rows_per_step": {
+          "1": 1616,
+          "2": 1515,
+          "3": 1414,
+          "4": 1313,
+          "5": 1212,
+          "6": 1111,
+          "7": 1010,
+          "8": 909,
+          "9": 808,
+          "10": 707,
+          "11": 606,
+          "12": 505
+        },
+        "steps_without_a_model": [],
+        "deviation_note": "\u00a713.2 specifies XGBoost. This is the same model family from scikit-learn, which is already a dependency; the XGBoost variant runs as well when the optional package is installed."
+      }
+    },
+    {
+      "model": "gbt_global",
+      "fold": 3,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 38109.507445779454,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 53684.240242489985,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 24.1655057353647,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 20.357710032950553,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 24.142407612463327,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": -22487.84853405324,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 1.276057840414012,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "model": "gbt_global",
+        "label": "Gradient-boosted trees (global)",
+        "family": "tree",
+        "uses_exogenous": true,
+        "implementation": "sklearn.HistGradientBoostingRegressor",
+        "parameters": {
+          "max_depth": 4,
+          "learning_rate": 0.05,
+          "max_iter": 300,
+          "min_samples_leaf": 20,
+          "l2_regularization": 1.0,
+          "early_stopping": false,
+          "random_state": 20260101
+        },
+        "feature_spec": {
+          "lags": [
+            1,
+            2,
+            3,
+            4,
+            8,
+            12,
+            52
+          ],
+          "rolling_windows": [
+            4,
+            12
+          ],
+          "calendar": true,
+          "horizon": 1
+        },
+        "scaled_per_series": true,
+        "training_rows_per_step": {
+          "1": 2828,
+          "2": 2727,
+          "3": 2626,
+          "4": 2525,
+          "5": 2424,
+          "6": 2323,
+          "7": 2222,
+          "8": 2121,
+          "9": 2020,
+          "10": 1919,
+          "11": 1818,
+          "12": 1717
+        },
+        "steps_without_a_model": [],
+        "deviation_note": "\u00a713.2 specifies XGBoost. This is the same model family from scikit-learn, which is already a dependency; the XGBoost variant runs as well when the optional package is installed."
+      }
+    },
+    {
+      "model": "combination_median",
+      "fold": 1,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 16293.289713139298,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 21901.149657845235,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 11.507794367898782,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 12.474563324696058,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 12.167019533642815,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 12691.88663792375,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.39671905595592716,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "members": [
+          "ets",
+          "fourier",
+          "moving_average",
+          "seasonal_naive",
+          "seasonal_naive_drift"
+        ],
+        "rule": "median",
+        "mean_disagreement": 184321.21306547616,
+        "uses_exogenous": false
+      }
+    },
+    {
+      "model": "combination_median",
+      "fold": 2,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 36529.337886080546,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 42557.23642639188,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 24.783382926689324,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 24.41185297506836,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 23.687865752589342,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": 12449.678557028927,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 1.38390976797217,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "members": [
+          "ets",
+          "fourier",
+          "moving_average",
+          "seasonal_naive",
+          "seasonal_naive_drift"
+        ],
+        "rule": "median",
+        "mean_disagreement": 44972.606259038985,
+        "uses_exogenous": false
+      }
+    },
+    {
+      "model": "combination_median",
+      "fold": 3,
+      "error": null,
+      "metrics": {
+        "MAE": {
+          "name": "MAE",
+          "value": 18014.28277083334,
+          "observations_used": 12
+        },
+        "RMSE": {
+          "name": "RMSE",
+          "value": 23005.595006212607,
+          "observations_used": 12
+        },
+        "MAPE": {
+          "name": "MAPE",
+          "value": 12.737501060683929,
+          "observations_used": 12
+        },
+        "sMAPE": {
+          "name": "sMAPE",
+          "value": 11.58745112626404,
+          "observations_used": 12
+        },
+        "WAPE": {
+          "name": "WAPE",
+          "value": 11.412064512206097,
+          "observations_used": 12
+        },
+        "Bias": {
+          "name": "Bias",
+          "value": -10293.83127083332,
+          "observations_used": 12
+        },
+        "MASE": {
+          "name": "MASE",
+          "value": 0.6031898156086697,
+          "observations_used": 12,
+          "note": "Scaled against seasonal naive with period 52 on the training window."
+        }
+      },
+      "details": {
+        "members": [
+          "ets",
+          "fourier",
+          "moving_average",
+          "seasonal_naive",
+          "seasonal_naive_drift"
+        ],
+        "rule": "median",
+        "mean_disagreement": 51989.77686295933,
+        "uses_exogenous": false
+      }
+    }
+  ]
+}

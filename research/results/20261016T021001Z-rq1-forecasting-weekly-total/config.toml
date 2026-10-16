@@ -1,0 +1,124 @@
+# RQ1: how do forecasting model families compare on this retailer's data?
+#
+# This file IS the experiment. It is declared before the run, committed to git,
+# and its SHA-256 is stored with the results. If the protocol changes, this file
+# changes, the hash changes, and the two runs are visibly different experiments
+# rather than silently the same one.
+#
+# The rule the architecture sets (§4.5): the protocol is not edited after
+# hold-out results have been seen. Editing it to improve a number is how an
+# experiment becomes a story about an experiment.
+#
+#   python research/run_experiment.py research/configs/rq1_forecasting.toml
+
+[meta]
+name = "rq1-forecasting-weekly-total"
+research_question = "RQ1"
+description = """
+Compare baseline, statistical and learned forecasting families on weekly
+revenue under one evaluation protocol, and test whether the observed ranking is
+distinguishable from noise."""
+author = "Saurabh Singh"
+
+[data]
+# Where the series comes from. "database" is authoritative for the report: it
+# uses the cleaned, stored dataset and the same SQL the dashboard uses, so the
+# numbers in the chapter and the numbers on screen cannot drift apart.
+#
+# "csv" reads a raw file directly with a light aggregation. It exists so the
+# protocol can be rehearsed without a database, and its results are for
+# development only - say so if any of them reach the report.
+source = "database"
+
+# Which dataset. Leave empty to use the most recently processed one, which is
+# convenient but not reproducible; fill it in before the run that gets cited.
+dataset_id = "a6a815d8-05de-476b-8429-32e0300a2506"
+
+# Only used when source = "csv".
+csv_path = "data/raw/online_retail_II.csv"
+
+granularity = "week"
+value_column = "net_revenue"
+
+# How many products join the panel the pooled tree model learns from. One
+# SKU has about 105 weekly points, far too few for a tree ensemble; pooling
+# a hundred gives thousands of training rows. The cut-off is reported with
+# the results, because "the top 100 products" and "all products" support
+# different claims (finding F5, survivorship bias).
+panel_products = 100
+
+[protocol]
+# The locked hold-out is the final `horizon` periods. Cross-validation happens
+# strictly inside what remains.
+horizon = 12
+folds = 3
+season_length = 52
+
+# "expanding" uses all history before each origin. "sliding" keeps the training
+# length constant, as Chu & Zhang (2003) did; worth a robustness run.
+window_style = "expanding"
+
+# WAPE: defined on zero weeks, weights periods by size. See metrics.py for why
+# MAPE is not the primary measure here (finding F7).
+primary_metric = "WAPE"
+
+[models]
+# Names from GET /forecast/models. Models whose optional library is missing are
+# reported and skipped rather than failing the run.
+include = [
+  "naive",
+  "seasonal_naive",
+  "seasonal_naive_drift",
+  "moving_average",
+  "fourier",
+  "ets",
+]
+
+# The pooled gradient-boosted tree model. Without it RQ1 compares statistical
+# models with each other rather than comparing families, which is a different
+# question from the one the research asks. It is not in `include` because it
+# does not take the single-series interface - it is fitted across the panel.
+include_global = true
+
+[models.params]
+fourier = { harmonics = 2 }
+moving_average = { window = 4 }
+
+[combination]
+# Aras, Deveci Kocakoç & Polat (2017): simple combination rules matched or beat
+# weighted ones on ten weekly retail series, and least-squares weights were
+# worse than the single models. The median is the default for its resistance to
+# one wild member.
+rule = "median"
+members = [
+  "seasonal_naive",
+  "seasonal_naive_drift",
+  "moving_average",
+  "fourier",
+  "ets",
+]
+
+[significance]
+# Friedman's test across models, then Bonferroni-corrected pairwise comparisons
+# - the procedure Aras et al. used. Declared here, before the data is seen, so
+# the test cannot be chosen to suit the result (§4.5).
+test = "friedman"
+correction = "bonferroni"
+alpha = 0.05
+
+[intervals]
+# Nominal coverage for the selected model's prediction interval. It is sized on
+# the cross-validation errors and then checked against the hold-out; sizing it
+# on the hold-out would guarantee good coverage and demonstrate nothing.
+level = 0.80
+
+[output]
+directory = "research/results"
+# Writing the per-fold table as CSV means the significance test can be re-run by
+# someone else without this codebase.
+write_csv = true
+write_json = true
+
+[reproducibility]
+random_seed = 20260101
+# The library versions are recorded automatically with every run.
