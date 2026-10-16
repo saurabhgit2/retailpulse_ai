@@ -2,6 +2,7 @@
 
 from app.db.models.analysis import AnalysisResult
 from app.db.models.dataset import Dataset
+from app.db.models.forecast import ForecastModelResult, ForecastRun
 from app.db.models.sales import Category, Customer, Product, SalesRecord
 from app.db.models.user import User
 
@@ -10,6 +11,8 @@ __all__ = [
     "Dataset",
     "Category",
     "Customer",
+    "ForecastModelResult",
+    "ForecastRun",
     "Product",
     "SalesRecord",
     "User",
