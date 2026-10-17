@@ -29,3 +29,6 @@ data/uploads/*
 .idea/
 .DS_Store
 Thumbs.db
+
+rq1_run.log
+rq2_run.log
