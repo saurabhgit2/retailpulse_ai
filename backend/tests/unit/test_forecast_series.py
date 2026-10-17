@@ -26,18 +26,23 @@ def test_a_missing_week_is_filled_with_zero_and_counted():
         [100.0, 110.0, 130.0], index=[WEEKS[0], WEEKS[1], WEEKS[3]]
     )
 
-    filled, added = _fill_period_gaps(with_gap, "week")
+    filled, added, gaps = _fill_period_gaps(with_gap, "week")
 
     assert added == 1
     assert len(filled) == 4
     assert filled.loc[WEEKS[2]] == 0.0
     assert list(filled.index) == list(WEEKS[:4])
+    # The dates, not just the count: a closure week filled with zero at the end
+    # of a fold's training window makes every last-value model forecast zero,
+    # and without the dates that reads as the models failing.
+    assert gaps == [WEEKS[2]]
 
 
 def test_an_evenly_spaced_series_is_left_alone():
     series = pd.Series(range(10), index=WEEKS, dtype="float64")
-    filled, added = _fill_period_gaps(series, "week")
+    filled, added, gaps = _fill_period_gaps(series, "week")
     assert added == 0
+    assert gaps == []
     assert filled.equals(series)
 
 
