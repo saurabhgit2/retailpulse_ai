@@ -24,7 +24,7 @@ source = "database"
 # Fill this in before the run whose numbers you cite. Left empty the runner
 # uses the most recently processed dataset, which is convenient but not a
 # reproducible reference, and it warns about exactly that.
-dataset_id = ""
+dataset_id = "a6a815d8-05de-476b-8429-32e0300a2506"
 
 [windows]
 # How many as-of dates to segment at. Stability needs at least two; four gives
