@@ -119,6 +119,17 @@ def _name_clusters(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         m = _position(monetary, row["median_monetary"], lower_is_better=False)
         row["axes"] = {"recency": r, "frequency": f, "monetary": m}
         row["name"] = _name_from_axes(r, f, m)
+
+    # Two clusters can land in the same band on every axis - with k = 4 the
+    # ranked positions are 0, 1/3, 2/3 and 1, so two are "high" and two are
+    # "low" on each. Identical names for different segments are unusable in a
+    # report, so collisions are broken by spend, which is the axis a reader
+    # cares most about.
+    _disambiguate(rows)
+
+    # The description is written after disambiguation so it accompanies the
+    # final name rather than an intermediate one.
+    for row in rows:
         row["description"] = (
             f"Median {row['median_recency_days']:.0f} days since last purchase, "
             f"{row['median_frequency']:.0f} orders, "
@@ -129,6 +140,34 @@ def _name_clusters(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             if row.get("revenue_share") is not None else ""
         )
     return rows
+
+
+def _disambiguate(rows: list[dict[str, Any]]) -> None:
+    """Make every cluster name unique, in place.
+
+    Clusters sharing a name are ranked by median spend and qualified
+    "(highest spend)", "(second highest spend)" and so on. The qualifier names
+    the dimension used, so a reader is never left guessing what separates two
+    similarly-named groups.
+    """
+    from collections import defaultdict
+
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        grouped[row["name"]].append(row)
+
+    ordinals = ["highest", "second highest", "third highest", "fourth highest",
+                "fifth highest", "sixth highest"]
+
+    for name, members in grouped.items():
+        if len(members) < 2:
+            continue
+        members.sort(key=lambda row: row["median_monetary"], reverse=True)
+        for position, row in enumerate(members):
+            qualifier = (
+                ordinals[position] if position < len(ordinals) else f"rank {position + 1}"
+            )
+            row["name"] = f"{name} ({qualifier} spend)"
 
 
 def _name_from_axes(recency: str, frequency: str, monetary: str) -> str:

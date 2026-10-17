@@ -426,3 +426,49 @@ def test_disagreeing_bands_are_reported_as_disagreement():
 
     verdict = compare_with_rfm_bands(clusters, bands)["verdict"]
     assert "disagree" in verdict or "only partly" in verdict
+
+
+def test_cluster_names_are_unique_even_when_bands_collide():
+    """With k=4 the ranked positions are 0, 1/3, 2/3 and 1, so two clusters
+    land in "high" and two in "low" on every axis - which gave two different
+    segments the same name on the real Online Retail II run. Collisions are
+    broken by spend, and the qualifier names the dimension used."""
+    customers = pd.DataFrame({
+        "customer": [f"C{i}" for i in range(400)],
+        "recency_days": np.repeat([400.0, 300.0, 40.0, 25.0], 100),
+        "frequency": np.repeat([2.0, 3.0, 12.0, 30.0], 100),
+        "monetary": np.repeat([200.0, 150.0, 1800.0, 9000.0], 100),
+    })
+    labels = np.repeat([0, 1, 2, 3], 100)
+
+    rows = describe_clusters(customers, labels)["rows"]
+    names = [row["name"] for row in rows]
+
+    assert len(names) == len(set(names))
+    assert any("highest spend" in name for name in names)
+
+
+def test_a_unique_name_is_left_unqualified():
+    """The qualifier should appear only where it is needed."""
+    customers = pd.DataFrame({
+        "customer": [f"C{i}" for i in range(300)],
+        "recency_days": np.repeat([400.0, 120.0, 20.0], 100),
+        "frequency": np.repeat([1.0, 8.0, 40.0], 100),
+        "monetary": np.repeat([100.0, 900.0, 9000.0], 100),
+    })
+    rows = describe_clusters(customers, np.repeat([0, 1, 2], 100))["rows"]
+    assert all("spend)" not in row["name"] for row in rows)
+
+
+def test_the_description_matches_the_final_name():
+    """The description is written after disambiguation, so it cannot describe
+    an intermediate name."""
+    customers = pd.DataFrame({
+        "customer": [f"C{i}" for i in range(400)],
+        "recency_days": np.repeat([400.0, 300.0, 40.0, 25.0], 100),
+        "frequency": np.repeat([2.0, 3.0, 12.0, 30.0], 100),
+        "monetary": np.repeat([200.0, 150.0, 1800.0, 9000.0], 100),
+    })
+    rows = describe_clusters(customers, np.repeat([0, 1, 2, 3], 100))["rows"]
+    assert all(row["description"] for row in rows)
+    assert all("net spend" in row["description"] for row in rows)
