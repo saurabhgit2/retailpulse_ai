@@ -1,0 +1,118 @@
+# RQ2: are the customer segments stable, or do they describe the window?
+#
+# Same discipline as rq1_forecasting.toml. This file IS the experiment: it is
+# declared before the run, committed, and its SHA-256 is stored with the
+# results. If the protocol changes, the hash changes, and two runs are visibly
+# different experiments rather than silently the same one.
+#
+#   python research/run_segmentation.py research/configs/rq2_segmentation.toml
+
+[meta]
+name = "rq2-segmentation-stability"
+research_question = "RQ2"
+description = """
+Cluster customers on RFM across several as-of dates and measure whether the
+resulting segments are stable, using three clustering families and five
+quality indices."""
+author = "Saurabh Singh"
+
+[data]
+# "database" is authoritative: the cleaned, stored dataset through the same SQL
+# the dashboard uses, so the chapter and the screen cannot drift apart.
+source = "database"
+
+# Fill this in before the run whose numbers you cite. Left empty the runner
+# uses the most recently processed dataset, which is convenient but not a
+# reproducible reference, and it warns about exactly that.
+dataset_id = ""
+
+[windows]
+# How many as-of dates to segment at. Stability needs at least two; four gives
+# three consecutive comparisons plus three longer-range ones, which separates
+# slow drift from a sudden reshuffle.
+count = 4
+
+# "expanding" accumulates history - what a business actually sees on any given
+# Monday. "rolling" keeps a fixed length and slides, so a lapsed customer
+# eventually leaves the window; that measures stability of recent behaviour and
+# is a harsher test. They answer different questions; say which produced the
+# reported figures.
+style = "expanding"
+
+# Only used when style = "rolling".
+window_days = 365
+
+# History the FIRST window must have, so every snapshot has a full annual cycle
+# behind it. Without this the earliest segmentation describes a different kind
+# of business from the latest, and the stability number measures that rather
+# than customer drift.
+min_history_days = 365
+
+[features]
+# Chen, Sain & Guo (2012) warn that k-means is sensitive to outliers and to
+# variables on incomparable scales. Recency is in days, frequency is a count,
+# monetary is money - so every transform below is a deliberate decision and is
+# recorded in the output.
+scaler = "standard"          # standard | robust | minmax | none
+
+# analytics/rfm.py found a minimum net monetary of -1,343 on the real data:
+# customers whose returns exceeded their purchases. A plain log is undefined
+# there.
+#   signed_log - sign(x) * log1p(|x|); keeps everyone, symmetric about zero
+#   shift_log  - depends on the most extreme customer, so two windows get
+#                different transforms; bad for stability work
+#   exclude    - drops them and reports how many; removes exactly the customers
+#                a returns-reduction campaign would target
+negative_monetary = "signed_log"
+
+# Recency is negated before scaling so larger means better on all three axes,
+# which is what makes cluster centroids readable.
+invert_recency = true
+
+[clustering]
+# Three families. Where they agree the finding is much stronger than where only
+# one does.
+#   kmeans       - partitioning; Chen et al.'s method; assumes spherical clusters
+#   hierarchical - Ward linkage; assumes nested structure; deterministic
+#   gaussian     - model-based; clusters may differ in size, shape, orientation
+algorithms = ["kmeans", "hierarchical", "gaussian"]
+
+# The range of k to fit, so the quality indices have a curve to read rather
+# than a single point.
+k_min = 2
+k_max = 8
+
+# The k carried into the stability analysis. Declared here BEFORE seeing the
+# indices, because choosing k after looking at stability would be choosing the
+# answer. If the indices strongly suggest a different k, change this file, note
+# that you did, and re-run - the hash will show it.
+k = 4
+
+[quality]
+# Silhouette, Davies-Bouldin and Calinski-Harabasz are computed at every k.
+# The gap statistic is the only one that can say "there is no clustering here",
+# which on RFM is a real possibility worth testing for.
+gap_statistic = true
+gap_references = 10
+
+[stability]
+# Compare every pair of windows, not only neighbours: slow drift and a sudden
+# reshuffle look identical if only consecutive windows are compared.
+consecutive_only = false
+
+# Also compare the clusters against the conventional RFM score bands from
+# analytics/rfm.py, which are explicitly NOT a clustering result. High
+# agreement means the cheap explainable rule is a reasonable stand-in; low
+# agreement means the bands hide structure. Either is a finding.
+compare_with_rfm_bands = true
+
+[output]
+directory = "research/results"
+write_csv = true
+write_json = true
+
+[reproducibility]
+# k-means and Gaussian mixtures start from a random initialisation. Without a
+# fixed seed, "the segments changed" could mean the business changed or could
+# mean the seed did - and telling those apart is the whole of RQ2.
+random_seed = 20260101
