@@ -1,0 +1,862 @@
+{
+  "meta": {
+    "name": "rq2-segmentation-stability",
+    "research_question": "RQ2",
+    "description": "Cluster customers on RFM across several as-of dates and measure whether the\nresulting segments are stable, using three clustering families and five\nquality indices.",
+    "author": "Saurabh Singh"
+  },
+  "config_hash": "610e6dcc1a4f6562a96c72337321033c0eaea1e1307c46d567ed263422d3054b",
+  "run_at": "2026-10-17T00:41:17.443172+00:00",
+  "environment": {
+    "python": "3.12.1",
+    "numpy": "2.3.5",
+    "pandas": "2.3.3",
+    "scipy": "1.16.3",
+    "scikit-learn": "1.7.2"
+  },
+  "dataset": {
+    "id": "a6a815d8-05de-476b-8429-32e0300a2506",
+    "name": "online_retail_II",
+    "pipeline_version": "1.0.0"
+  },
+  "windows": {
+    "available": true,
+    "count": 4,
+    "style": "expanding",
+    "windows": [
+      {
+        "index": 1,
+        "style": "expanding",
+        "start": null,
+        "end": "2010-12-01",
+        "days": null
+      },
+      {
+        "index": 2,
+        "style": "expanding",
+        "start": null,
+        "end": "2011-04-04",
+        "days": null
+      },
+      {
+        "index": 3,
+        "style": "expanding",
+        "start": null,
+        "end": "2011-08-06",
+        "days": null
+      },
+      {
+        "index": 4,
+        "style": "expanding",
+        "start": null,
+        "end": "2011-12-09",
+        "days": null
+      }
+    ],
+    "note": "Expanding windows accumulate history, which is what a business actually sees on any given date. Rolling windows are the same length and slide forward, so a lapsed customer eventually leaves the window; that measures stability of recent behaviour and is a harsher test. They answer different questions."
+  },
+  "snapshots": {
+    "2010-12-01": {
+      "customers": 4268,
+      "as_of": "2010-12-01",
+      "guest_revenue": 1066357.58
+    },
+    "2011-04-04": {
+      "customers": 4727,
+      "as_of": "2011-04-04",
+      "guest_revenue": 1557758.39
+    },
+    "2011-08-06": {
+      "customers": 5169,
+      "as_of": "2011-08-06",
+      "guest_revenue": 1893233.56
+    },
+    "2011-12-09": {
+      "customers": 5874,
+      "as_of": "2011-12-09",
+      "guest_revenue": 2563111.09
+    }
+  },
+  "matrix": {
+    "customers": 5874,
+    "features": [
+      "recency_days",
+      "frequency",
+      "monetary"
+    ],
+    "transforms": {
+      "recency_days": "none",
+      "frequency": "log1p(x)",
+      "monetary": "sign(x) * log1p(|x|)"
+    },
+    "scaler": "standard",
+    "excluded": {},
+    "notes": [
+      "Recency is negated before scaling so that larger means better on all three axes; cluster centroids are otherwise uninterpretable."
+    ]
+  },
+  "quality": {
+    "kmeans": {
+      "rows": [
+        {
+          "k": 2,
+          "silhouette": 0.4111675989835985,
+          "davies_bouldin": 0.9078262681338497,
+          "calinski_harabasz": 5174.975718317693,
+          "inertia": 9366.98037009628,
+          "smallest_cluster_share": 0.4751447054817841
+        },
+        {
+          "k": 3,
+          "silhouette": 0.39912401041359724,
+          "davies_bouldin": 0.8721484690180841,
+          "calinski_harabasz": 5340.109315403617,
+          "inertia": 6250.82901121288,
+          "smallest_cluster_share": 0.2808988764044944
+        },
+        {
+          "k": 4,
+          "silhouette": 0.3538489065699742,
+          "davies_bouldin": 0.9095442470234906,
+          "calinski_harabasz": 4756.906926953047,
+          "inertia": 5135.926344510361,
+          "smallest_cluster_share": 0.16121893088185224
+        },
+        {
+          "k": 5,
+          "silhouette": 0.3686679076821078,
+          "davies_bouldin": 0.8132825480933633,
+          "calinski_harabasz": 4886.595713139947,
+          "inertia": 4069.397410365094,
+          "smallest_cluster_share": 0.008341845420497106
+        },
+        {
+          "k": 6,
+          "silhouette": 0.3666474878695568,
+          "davies_bouldin": 0.8342252387142155,
+          "calinski_harabasz": 4984.4009305987975,
+          "inertia": 3358.4426634504625,
+          "smallest_cluster_share": 0.008171603677221655
+        },
+        {
+          "k": 7,
+          "silhouette": 0.350140466992466,
+          "davies_bouldin": 0.8616989337431313,
+          "calinski_harabasz": 5049.268852312722,
+          "inertia": 2858.9964123902646,
+          "smallest_cluster_share": 0.008171603677221655
+        },
+        {
+          "k": 8,
+          "silhouette": 0.3412084660594599,
+          "davies_bouldin": 0.8624691536982483,
+          "calinski_harabasz": 5009.915467191931,
+          "inertia": 2525.267902686472,
+          "smallest_cluster_share": 0.008171603677221655
+        }
+      ],
+      "preferred_k": {
+        "silhouette": 2,
+        "davies_bouldin": 5,
+        "calinski_harabasz": 3,
+        "elbow": 3
+      },
+      "elbow": {
+        "available": true,
+        "k": 3,
+        "distances": {
+          "2": 0.0,
+          "3": 1.7327812566742338,
+          "4": 1.7105212728827606,
+          "5": 1.6458388275926528,
+          "6": 1.269327390197232,
+          "7": 0.7073286945796085,
+          "8": 1.8189902709073877e-12
+        },
+        "distinct": false,
+        "note": "The curve is smooth: k=3 is the furthest point from the chord, but it does not stand out, so the elbow should not be presented as evidence for that k.",
+        "spread": 1.7327812566742338
+      },
+      "unanimous": false,
+      "summary": "The indices disagree on k, which is the normal case. The choice is the researcher's and belongs in the method with its reasoning; no single number is returned here because that would hide the disagreement."
+    },
+    "hierarchical": {
+      "rows": [
+        {
+          "k": 2,
+          "silhouette": 0.40027315239884886,
+          "davies_bouldin": 0.8875499714350512,
+          "calinski_harabasz": 4950.480651355086,
+          "inertia": null,
+          "smallest_cluster_share": 0.3953013278855976
+        },
+        {
+          "k": 3,
+          "silhouette": 0.36180756881460047,
+          "davies_bouldin": 0.9289776154704456,
+          "calinski_harabasz": 4771.2673672128885,
+          "inertia": null,
+          "smallest_cluster_share": 0.30047667688117125
+        },
+        {
+          "k": 4,
+          "silhouette": 0.34021911971683205,
+          "davies_bouldin": 0.9063480546985393,
+          "calinski_harabasz": 4442.731969838131,
+          "inertia": null,
+          "smallest_cluster_share": 0.10146407899216887
+        },
+        {
+          "k": 5,
+          "silhouette": 0.3560755359657336,
+          "davies_bouldin": 0.833437826837088,
+          "calinski_harabasz": 4527.121981936759,
+          "inertia": null,
+          "smallest_cluster_share": 0.01038474633980252
+        },
+        {
+          "k": 6,
+          "silhouette": 0.3378171338736885,
+          "davies_bouldin": 0.8858921327556927,
+          "calinski_harabasz": 4415.819620667445,
+          "inertia": null,
+          "smallest_cluster_share": 0.01038474633980252
+        },
+        {
+          "k": 7,
+          "silhouette": 0.3186639661149558,
+          "davies_bouldin": 0.8830076824840046,
+          "calinski_harabasz": 4172.296039668034,
+          "inertia": null,
+          "smallest_cluster_share": 0.01038474633980252
+        },
+        {
+          "k": 8,
+          "silhouette": 0.2907215086930364,
+          "davies_bouldin": 0.9608021970555265,
+          "calinski_harabasz": 4061.0351708477324,
+          "inertia": null,
+          "smallest_cluster_share": 0.01038474633980252
+        }
+      ],
+      "preferred_k": {
+        "silhouette": 2,
+        "davies_bouldin": 5,
+        "calinski_harabasz": 2
+      },
+      "elbow": {
+        "available": false,
+        "reason": "No inertia."
+      },
+      "unanimous": false,
+      "summary": "The indices disagree on k, which is the normal case. The choice is the researcher's and belongs in the method with its reasoning; no single number is returned here because that would hide the disagreement."
+    },
+    "gaussian": {
+      "rows": [
+        {
+          "k": 2,
+          "silhouette": 0.31279370709396115,
+          "davies_bouldin": 1.173145937833866,
+          "calinski_harabasz": 3015.064780479728,
+          "inertia": null,
+          "smallest_cluster_share": 0.49676540687776644
+        },
+        {
+          "k": 3,
+          "silhouette": 0.2024926094827178,
+          "davies_bouldin": 1.4412349715047472,
+          "calinski_harabasz": 2360.357680343284,
+          "inertia": null,
+          "smallest_cluster_share": 0.23374191351719442
+        },
+        {
+          "k": 4,
+          "silhouette": 0.10082180482237371,
+          "davies_bouldin": 2.2146090589225245,
+          "calinski_harabasz": 1864.0539540868938,
+          "inertia": null,
+          "smallest_cluster_share": 0.22625127681307455
+        },
+        {
+          "k": 5,
+          "silhouette": 0.10025289591070173,
+          "davies_bouldin": 2.129682369510503,
+          "calinski_harabasz": 1682.1439259476217,
+          "inertia": null,
+          "smallest_cluster_share": 0.012427647259107933
+        },
+        {
+          "k": 6,
+          "silhouette": 0.008643133538479295,
+          "davies_bouldin": 2.061403385968,
+          "calinski_harabasz": 1448.845264607728,
+          "inertia": null,
+          "smallest_cluster_share": 0.01208716377255703
+        },
+        {
+          "k": 7,
+          "silhouette": 0.00678013131357337,
+          "davies_bouldin": 2.421377516380556,
+          "calinski_harabasz": 1504.224179293064,
+          "inertia": null,
+          "smallest_cluster_share": 0.009874021109976166
+        },
+        {
+          "k": 8,
+          "silhouette": -0.002840221917716435,
+          "davies_bouldin": 2.904060688321036,
+          "calinski_harabasz": 1346.452627497731,
+          "inertia": null,
+          "smallest_cluster_share": 0.010044262853251617
+        }
+      ],
+      "preferred_k": {
+        "silhouette": 2,
+        "davies_bouldin": 2,
+        "calinski_harabasz": 2
+      },
+      "elbow": {
+        "available": false,
+        "reason": "No inertia."
+      },
+      "unanimous": true,
+      "summary": "All indices prefer k=2, which is unusually clear agreement and worth saying."
+    }
+  },
+  "gap_statistic": {
+    "available": true,
+    "references": 10,
+    "rows": [
+      {
+        "k": 2,
+        "gap": 1.7311353797695652,
+        "std_error": 0.00990507959202515
+      },
+      {
+        "k": 3,
+        "gap": 1.8887297420996862,
+        "std_error": 0.008840898250998243
+      },
+      {
+        "k": 4,
+        "gap": 1.8568452839115288,
+        "std_error": 0.006778217660729968
+      },
+      {
+        "k": 5,
+        "gap": 1.8630361593653557,
+        "std_error": 0.007225296625875769
+      },
+      {
+        "k": 6,
+        "gap": 1.8695284460370036,
+        "std_error": 0.006973792992208161
+      },
+      {
+        "k": 7,
+        "gap": 1.9197756331622493,
+        "std_error": 0.005900849969185519
+      },
+      {
+        "k": 8,
+        "gap": 1.9501513990722525,
+        "std_error": 0.006388987251948418
+      }
+    ],
+    "k": 3,
+    "note": "The gap statistic selects k=3."
+  },
+  "k": 3,
+  "stability": {
+    "kmeans": {
+      "available": true,
+      "windows": [
+        "2010-12-01",
+        "2011-04-04",
+        "2011-08-06",
+        "2011-12-09"
+      ],
+      "pairs": [
+        {
+          "from": "2010-12-01",
+          "to": "2011-04-04",
+          "consecutive": true,
+          "customers_compared": 4268,
+          "adjusted_rand": 0.5972939142027277,
+          "retention_share": 0.854967197750703
+        },
+        {
+          "from": "2010-12-01",
+          "to": "2011-08-06",
+          "consecutive": false,
+          "customers_compared": 4268,
+          "adjusted_rand": 0.31038551063613246,
+          "retention_share": 0.6679943767572634
+        },
+        {
+          "from": "2010-12-01",
+          "to": "2011-12-09",
+          "consecutive": false,
+          "customers_compared": 4268,
+          "adjusted_rand": 0.26252307212582293,
+          "retention_share": 0.6187910028116214
+        },
+        {
+          "from": "2011-04-04",
+          "to": "2011-08-06",
+          "consecutive": true,
+          "customers_compared": 4727,
+          "adjusted_rand": 0.4109573888944771,
+          "retention_share": 0.7423312883435583
+        },
+        {
+          "from": "2011-04-04",
+          "to": "2011-12-09",
+          "consecutive": false,
+          "customers_compared": 4727,
+          "adjusted_rand": 0.32189648843969176,
+          "retention_share": 0.6507298497990268
+        },
+        {
+          "from": "2011-08-06",
+          "to": "2011-12-09",
+          "consecutive": true,
+          "customers_compared": 5169,
+          "adjusted_rand": 0.4506074909153688,
+          "retention_share": 0.775198297543045
+        }
+      ],
+      "mean_adjusted_rand": 0.3922773108690368,
+      "mean_consecutive_adjusted_rand": 0.48628626467085784,
+      "mean_retention_share": 0.7183353355008696,
+      "verdict": "Segments are unstable (mean ARI 0.392, 71.8% retention). The grouping changes substantially as the window moves, so it should not be presented as a description of the customer base, and any campaign built on it would be targeting a different population each time it ran. This is a finding, not a failure - report it.",
+      "measure_note": "The Adjusted Rand Index does not appear in the supplied segmentation literature; it is used here as a label-free way to compare two partitions of the same customers. The retention share is reported alongside because it needs no reference and any reader can interpret it.",
+      "caveat": "Computed on the customers present in both windows (4268 at the thinnest pair). Customers who joined later cannot have moved, and counting them would make stability look worse the faster the business grows."
+    },
+    "hierarchical": {
+      "available": true,
+      "windows": [
+        "2010-12-01",
+        "2011-04-04",
+        "2011-08-06",
+        "2011-12-09"
+      ],
+      "pairs": [
+        {
+          "from": "2010-12-01",
+          "to": "2011-04-04",
+          "consecutive": true,
+          "customers_compared": 4268,
+          "adjusted_rand": 0.38239786927876906,
+          "retention_share": 0.7582005623242737
+        },
+        {
+          "from": "2010-12-01",
+          "to": "2011-08-06",
+          "consecutive": false,
+          "customers_compared": 4268,
+          "adjusted_rand": 0.16852211524782335,
+          "retention_share": 0.584817244611059
+        },
+        {
+          "from": "2010-12-01",
+          "to": "2011-12-09",
+          "consecutive": false,
+          "customers_compared": 4268,
+          "adjusted_rand": 0.12471629982639744,
+          "retention_share": 0.5124179943767573
+        },
+        {
+          "from": "2011-04-04",
+          "to": "2011-08-06",
+          "consecutive": true,
+          "customers_compared": 4727,
+          "adjusted_rand": 0.2428042649784184,
+          "retention_share": 0.5891686058811085
+        },
+        {
+          "from": "2011-04-04",
+          "to": "2011-12-09",
+          "consecutive": false,
+          "customers_compared": 4727,
+          "adjusted_rand": 0.1776429537742378,
+          "retention_share": 0.5633594245821875
+        },
+        {
+          "from": "2011-08-06",
+          "to": "2011-12-09",
+          "consecutive": true,
+          "customers_compared": 5169,
+          "adjusted_rand": 0.4827436325020783,
+          "retention_share": 0.7858386535113174
+        }
+      ],
+      "mean_adjusted_rand": 0.26313785593462075,
+      "mean_consecutive_adjusted_rand": 0.3693152555864219,
+      "mean_retention_share": 0.6323004142144505,
+      "verdict": "Segments are unstable (mean ARI 0.263, 63.2% retention). The grouping changes substantially as the window moves, so it should not be presented as a description of the customer base, and any campaign built on it would be targeting a different population each time it ran. This is a finding, not a failure - report it.",
+      "measure_note": "The Adjusted Rand Index does not appear in the supplied segmentation literature; it is used here as a label-free way to compare two partitions of the same customers. The retention share is reported alongside because it needs no reference and any reader can interpret it.",
+      "caveat": "Computed on the customers present in both windows (4268 at the thinnest pair). Customers who joined later cannot have moved, and counting them would make stability look worse the faster the business grows."
+    },
+    "gaussian": {
+      "available": true,
+      "windows": [
+        "2010-12-01",
+        "2011-04-04",
+        "2011-08-06",
+        "2011-12-09"
+      ],
+      "pairs": [
+        {
+          "from": "2010-12-01",
+          "to": "2011-04-04",
+          "consecutive": true,
+          "customers_compared": 4268,
+          "adjusted_rand": 0.09200289982916628,
+          "retention_share": 0.5173383317713215
+        },
+        {
+          "from": "2010-12-01",
+          "to": "2011-08-06",
+          "consecutive": false,
+          "customers_compared": 4268,
+          "adjusted_rand": 0.08713847290904227,
+          "retention_share": 0.5121836925960638
+        },
+        {
+          "from": "2010-12-01",
+          "to": "2011-12-09",
+          "consecutive": false,
+          "customers_compared": 4268,
+          "adjusted_rand": 0.10078342511457108,
+          "retention_share": 0.5187441424554826
+        },
+        {
+          "from": "2011-04-04",
+          "to": "2011-08-06",
+          "consecutive": true,
+          "customers_compared": 4727,
+          "adjusted_rand": 0.42001213068345544,
+          "retention_share": 0.7328115083562513
+        },
+        {
+          "from": "2011-04-04",
+          "to": "2011-12-09",
+          "consecutive": false,
+          "customers_compared": 4727,
+          "adjusted_rand": 0.2782889173527874,
+          "retention_share": 0.6553839644594881
+        },
+        {
+          "from": "2011-08-06",
+          "to": "2011-12-09",
+          "consecutive": true,
+          "customers_compared": 5169,
+          "adjusted_rand": 0.3505105691673686,
+          "retention_share": 0.709808473592571
+        }
+      ],
+      "mean_adjusted_rand": 0.2214560691760652,
+      "mean_consecutive_adjusted_rand": 0.2875085332266634,
+      "mean_retention_share": 0.6077116855385297,
+      "verdict": "Segments are unstable (mean ARI 0.221, 60.8% retention). The grouping changes substantially as the window moves, so it should not be presented as a description of the customer base, and any campaign built on it would be targeting a different population each time it ran. This is a finding, not a failure - report it.",
+      "measure_note": "The Adjusted Rand Index does not appear in the supplied segmentation literature; it is used here as a label-free way to compare two partitions of the same customers. The retention share is reported alongside because it needs no reference and any reader can interpret it.",
+      "caveat": "Computed on the customers present in both windows (4268 at the thinnest pair). Customers who joined later cannot have moved, and counting them would make stability look worse the faster the business grows."
+    }
+  },
+  "profiles": {
+    "available": true,
+    "clusters": 3,
+    "customers": 5874,
+    "rows": [
+      {
+        "cluster": 1,
+        "customers": 1650,
+        "customer_share": 0.2808988764044944,
+        "median_recency_days": 22.0,
+        "median_frequency": 11.0,
+        "median_monetary": 3808.855,
+        "mean_monetary": 8096.5389393939395,
+        "total_monetary": 13359289.25,
+        "revenue_share": 0.8173839904415415,
+        "axes": {
+          "recency": "high",
+          "frequency": "high",
+          "monetary": "high"
+        },
+        "name": "recent, frequent, high value",
+        "description": "Median 22 days since last purchase, 11 orders, 3,809 net spend. 1,650 customers (28.1%) holding 81.7% of revenue."
+      },
+      {
+        "cluster": 0,
+        "customers": 2393,
+        "customer_share": 0.4073884916581546,
+        "median_recency_days": 59.0,
+        "median_frequency": 3.0,
+        "median_monetary": 705.79,
+        "mean_monetary": 852.504036773924,
+        "total_monetary": 2040042.1600000001,
+        "revenue_share": 0.12481935005709843,
+        "axes": {
+          "recency": "mid",
+          "frequency": "mid",
+          "monetary": "mid"
+        },
+        "name": "mid recency, mid frequency, mid value",
+        "description": "Median 59 days since last purchase, 3 orders, 706 net spend. 2,393 customers (40.7%) holding 12.5% of revenue."
+      },
+      {
+        "cluster": 2,
+        "customers": 1831,
+        "customer_share": 0.31171263193735105,
+        "median_recency_days": 436.0,
+        "median_frequency": 1.0,
+        "median_monetary": 312.38,
+        "mean_monetary": 515.9072364827962,
+        "total_monetary": 944626.1499999999,
+        "revenue_share": 0.057796659501360086,
+        "axes": {
+          "recency": "low",
+          "frequency": "low",
+          "monetary": "low"
+        },
+        "name": "lapsed occasional",
+        "description": "Median 436 days since last purchase, 1 orders, 312 net spend. 1,831 customers (31.2%) holding 5.8% of revenue."
+      }
+    ],
+    "revenue_concentration": {
+      "top_cluster": 1,
+      "top_cluster_name": "recent, frequent, high value",
+      "top_cluster_customer_share": 0.2808988764044944,
+      "top_cluster_revenue_share": 0.8173839904415415,
+      "summary": "The largest cluster by revenue holds 28.1% of customers and 81.7% of revenue."
+    },
+    "naming_note": "Names are derived from each cluster's position relative to the others on the three axes, not from conventional RFM bands. If they resemble the band labels in the RFM report, that resemblance is a result worth showing, not an assumption."
+  },
+  "rfm_band_comparison": {
+    "available": true,
+    "customers_compared": 5874,
+    "adjusted_rand": 0.297036316014856,
+    "crosstab": {
+      "at_risk": {
+        "0": 0,
+        "1": 15,
+        "2": 144
+      },
+      "champions": {
+        "0": 428,
+        "1": 1190,
+        "2": 0
+      },
+      "hibernating": {
+        "0": 769,
+        "1": 0,
+        "2": 1596
+      },
+      "loyal": {
+        "0": 466,
+        "1": 445,
+        "2": 89
+      },
+      "new": {
+        "0": 416,
+        "1": 0,
+        "2": 2
+      },
+      "potential_loyalist": {
+        "0": 314,
+        "1": 0,
+        "2": 0
+      }
+    },
+    "verdict": "The clusters and the conventional RFM bands agree only partly (ARI 0.297): clustering finds structure the score bands do not capture, which is an argument for reporting both."
+  },
+  "migrations": {
+    "2010-12-01 -> 2011-04-04": {
+      "available": true,
+      "customers_compared": 4268,
+      "matrix": {
+        "0": {
+          "0": 1197,
+          "1": 24,
+          "2": 256
+        },
+        "1": {
+          "0": 5,
+          "1": 807,
+          "2": 107
+        },
+        "2": {
+          "0": 97,
+          "1": 130,
+          "2": 1645
+        }
+      },
+      "stayed": 3649,
+      "retention_share": 0.854967197750703,
+      "clusters_matched": true,
+      "label_mapping": {
+        "0": 0,
+        "1": 2,
+        "2": 1
+      },
+      "largest_flows": [
+        {
+          "from": 2,
+          "to": 0,
+          "customers": 256,
+          "share_of_source": 0.12749003984063745
+        },
+        {
+          "from": 1,
+          "to": 2,
+          "customers": 130,
+          "share_of_source": 0.13527575442247658
+        },
+        {
+          "from": 2,
+          "to": 1,
+          "customers": 107,
+          "share_of_source": 0.053286852589641436
+        },
+        {
+          "from": 0,
+          "to": 2,
+          "customers": 97,
+          "share_of_source": 0.07467282525019246
+        },
+        {
+          "from": 1,
+          "to": 0,
+          "customers": 24,
+          "share_of_source": 0.02497398543184183
+        }
+      ],
+      "note": "Rows are the earlier window's clusters, columns the later one's. Cluster labels are arbitrary, so the later window's labels were matched to the earlier window's by maximum overlap before counting; without that step the diagonal would be meaningless."
+    },
+    "2011-04-04 -> 2011-08-06": {
+      "available": true,
+      "customers_compared": 4727,
+      "matrix": {
+        "0": {
+          "0": 1253,
+          "1": 121,
+          "2": 8
+        },
+        "1": {
+          "0": 235,
+          "1": 1457,
+          "2": 113
+        },
+        "2": {
+          "0": 2,
+          "1": 739,
+          "2": 799
+        }
+      },
+      "stayed": 3509,
+      "retention_share": 0.7423312883435583,
+      "clusters_matched": true,
+      "label_mapping": {
+        "0": 0,
+        "1": 1,
+        "2": 2
+      },
+      "largest_flows": [
+        {
+          "from": 1,
+          "to": 2,
+          "customers": 739,
+          "share_of_source": 0.31894691411307724
+        },
+        {
+          "from": 0,
+          "to": 1,
+          "customers": 235,
+          "share_of_source": 0.15771812080536912
+        },
+        {
+          "from": 1,
+          "to": 0,
+          "customers": 121,
+          "share_of_source": 0.05222270176952956
+        },
+        {
+          "from": 2,
+          "to": 1,
+          "customers": 113,
+          "share_of_source": 0.12282608695652174
+        },
+        {
+          "from": 2,
+          "to": 0,
+          "customers": 8,
+          "share_of_source": 0.008695652173913044
+        }
+      ],
+      "note": "Rows are the earlier window's clusters, columns the later one's. Cluster labels are arbitrary, so the later window's labels were matched to the earlier window's by maximum overlap before counting; without that step the diagonal would be meaningless."
+    },
+    "2011-08-06 -> 2011-12-09": {
+      "available": true,
+      "customers_compared": 5169,
+      "matrix": {
+        "0": {
+          "0": 1337,
+          "1": 281,
+          "2": 6
+        },
+        "1": {
+          "0": 52,
+          "1": 1401,
+          "2": 266
+        },
+        "2": {
+          "0": 4,
+          "1": 553,
+          "2": 1269
+        }
+      },
+      "stayed": 4007,
+      "retention_share": 0.775198297543045,
+      "clusters_matched": true,
+      "label_mapping": {
+        "0": 1,
+        "1": 0,
+        "2": 2
+      },
+      "largest_flows": [
+        {
+          "from": 1,
+          "to": 2,
+          "customers": 553,
+          "share_of_source": 0.24742729306487696
+        },
+        {
+          "from": 1,
+          "to": 0,
+          "customers": 281,
+          "share_of_source": 0.12572706935123043
+        },
+        {
+          "from": 2,
+          "to": 1,
+          "customers": 266,
+          "share_of_source": 0.17261518494484102
+        },
+        {
+          "from": 0,
+          "to": 1,
+          "customers": 52,
+          "share_of_source": 0.03732950466618808
+        },
+        {
+          "from": 2,
+          "to": 0,
+          "customers": 6,
+          "share_of_source": 0.003893575600259572
+        }
+      ],
+      "note": "Rows are the earlier window's clusters, columns the later one's. Cluster labels are arbitrary, so the later window's labels were matched to the earlier window's by maximum overlap before counting; without that step the diagonal would be meaningless."
+    }
+  }
+}
