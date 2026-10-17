@@ -86,7 +86,7 @@ k_max = 8
 # indices, because choosing k after looking at stability would be choosing the
 # answer. If the indices strongly suggest a different k, change this file, note
 # that you did, and re-run - the hash will show it.
-k = 4
+k = 3
 
 [quality]
 # Silhouette, Davies-Bouldin and Calinski-Harabasz are computed at every k.
