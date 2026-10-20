@@ -21,7 +21,7 @@ source = "database"
 
 # Fill this in before the run whose numbers you cite. Left empty the runner
 # uses the most recently processed dataset and warns about exactly that.
-dataset_id = ""
+dataset_id = "a6a815d8-05de-476b-8429-32e0300a2506"
 
 [baskets]
 # One invoice is one basket. Quantity is ignored: a basket is a set, and buying
