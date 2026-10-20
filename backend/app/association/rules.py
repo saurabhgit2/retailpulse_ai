@@ -374,10 +374,17 @@ def summarise(rules: list[Rule], *, alpha: float = 0.05) -> dict[str, Any]:
         "correction": f"Benjamini-Hochberg at alpha = {alpha}",
         "note": (
             f"{len(significant):,} of {len(tested):,} rules survived the "
-            f"false-discovery-rate correction. {lost:,} would have been called "
-            f"significant on their raw p-value alone - which is what testing "
-            f"thousands of rules at once does, and why the correction is not "
-            f"optional."
+            f"false-discovery-rate correction. "
+            + (
+                f"{lost:,} were significant on their raw p-value and were "
+                f"rejected by it - which is what testing thousands of rules at "
+                f"once does, and why the correction is not optional."
+                if lost else
+                "The correction rejected nothing: every rule significant at the "
+                "raw threshold stayed significant after it. That means these "
+                "associations sit far from the threshold, not that the "
+                "correction was unnecessary - it had to be applied to know."
+            )
         ),
     }
 
