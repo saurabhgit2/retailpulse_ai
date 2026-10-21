@@ -64,7 +64,7 @@ compare_singleton_policies = true
 # orders can carry more pair evidence than thousands of ordinary baskets.
 # Empty means no cap - the honest default, because capping changes which
 # population the rules describe. Set a number and say so if you cap.
-max_basket_size = 0
+max_basket_size = 200
 
 [mining]
 # The two thresholds that decide everything, declared before the run.
