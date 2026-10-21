@@ -1,0 +1,205 @@
+# RQ3: which products are bought together, and do those rules still hold
+# in a period they were not mined on?
+#
+# Same discipline as rq1_forecasting.toml and rq2_segmentation.toml. This file
+# IS the experiment: declared before the run, committed, and its SHA-256 stored
+# with the results. Changing a threshold changes the hash, so two runs are
+# visibly different experiments rather than silently the same one.
+#
+#   python research/run_association.py research/configs/rq3_association.toml
+
+[meta]
+name = "rq3-association-rules"
+research_question = "RQ3"
+description = """
+Mine association rules on the earlier baskets, measure them unchanged on the
+later ones, and report what share still holds."""
+author = "Saurabh Singh"
+
+[data]
+source = "database"
+
+# Fill this in before the run whose numbers you cite. Left empty the runner
+# uses the most recently processed dataset and warns about exactly that.
+dataset_id = "a6a815d8-05de-476b-8429-32e0300a2506"
+
+[baskets]
+# One invoice is one basket. Quantity is ignored: a basket is a set, and buying
+# six of something is the same co-occurrence evidence as buying one.
+#
+# Jirapatsil & Phumchusri (2022) section 3 mine at two levels - "Grouping the
+# product by Category and SKU". Set this to "category" for the second run; on a
+# long-tailed catalogue the category run is usually the one dense enough to act
+# on. Run both and report both.
+#   product_code | product_name | category
+item_key = "product_code"
+
+# A return is the reversal of a purchase decision, not a second one. A credit
+# note listing six items is not evidence that those six go together.
+drop_returns = true
+
+# Postage, bank charges and manual adjustments co-occur with almost everything.
+# Left in they produce the highest-lift rules in the dataset and every one is
+# an artefact of billing. The list is imported from preprocessing.field_guide,
+# never restated here.
+exclude_non_product_codes = true
+
+# Single-item invoices cannot carry a rule, but they belong in the denominator:
+# support is the share of ALL baskets, so dropping them would inflate every
+# support figure. Raise this only deliberately.
+#
+# Qiu et al. (2023) argue the opposite - their "deletion module" removes these
+# records - and report that it finds more rules. Their own Table 2 shows why:
+# the rule d -> b moves from confidence 0.67 to 1.00 while its support count
+# stays at 2. Same evidence, smaller denominator. Keeping them is the choice
+# here, and the comparison below measures the difference on your data instead
+# of settling it by assertion.
+min_basket_size = 1
+
+# Mine twice, with and without single-item baskets, and report what changed -
+# in particular how many rules gained support without gaining evidence.
+compare_singleton_policies = true
+
+# A basket of n items contributes n(n-1)/2 pairs, so a handful of wholesale
+# orders can carry more pair evidence than thousands of ordinary baskets.
+# Empty means no cap - the honest default, because capping changes which
+# population the rules describe. Set a number and say so if you cap.
+max_basket_size = 200
+
+[mining]
+# The two thresholds that decide everything, declared before the run.
+#
+# min_support is the share of baskets an itemset must appear in. Online Retail
+# II has roughly 20,000 invoices and 4,000 products, so even a popular pairing
+# is rare in relative terms: 0.01 means 200 baskets, which is a real pattern
+# and still leaves a workable number of itemsets. Raising it to 0.05 on this
+# data returns almost nothing; that is a property of long-tail retail, not a
+# bug, and it is worth reporting if you try it.
+min_support = 0.01
+
+# min_confidence is P(consequent | antecedent). Low enough to admit rules worth
+# looking at, and deliberately NOT the measure anything is judged on - a
+# confident rule at lift 1.0 is a popular item, not an association.
+min_confidence = 0.20
+
+# Rules at exactly independence are admitted so they appear in the output and
+# can be seen to be uninteresting. Filtering before showing the reader that the
+# filter was needed hides the argument.
+min_lift = 1.0
+
+# Ni et al. (2020) section 4.4 use cross-support - min(support) over
+# max(support) across the two sides - to discard pairs whose items sell at very
+# different rates, because that is where a high confidence says least. 0.0
+# disables the filter; a value like 0.1 drops pairs where one item is more than
+# ten times as common as the other.
+#
+# Left off by default: normalised lift already handles most of the damage, and
+# a filter that removes rules should be switched on deliberately and reported.
+min_cross_support = 0.0
+
+# Itemsets up to this size. Three allows a two-item antecedent, which is the
+# longest condition a shelf plan or a recommendation widget can express.
+max_length = 3
+
+# Single-item consequents. "Also buy X" is actionable; "also buy X and Y
+# together" is not, and allowing multi-item consequents multiplies the
+# multiple-testing burden for output nobody uses.
+max_consequent_length = 1
+
+[significance]
+# Mining generates thousands of rules. Ten thousand tested at p < 0.05 produce
+# five hundred "significant" rules from pure noise. Each rule gets a one-sided
+# Fisher exact test and the p-values are corrected for false discovery rate.
+#
+# Benjamini-Hochberg rather than the Bonferroni used in RQ1, deliberately:
+# Bonferroni controls the chance of ANY false positive, which is right when one
+# wrong claim damages the conclusion, as in the model comparison. Here the
+# output is a ranked list a manager acts on a few of, so the right target is
+# the share of false discoveries among those reported.
+enabled = true
+alpha = 0.05
+
+[pruning]
+# Drop rules that restate a more general rule with the same consequent and no
+# less confidence. "tea + sugar -> mug" adds nothing to "tea -> mug" if both
+# are equally reliable, and a table full of such restatements makes one finding
+# look like forty.
+drop_redundant = true
+
+# How much better a specialised rule must be to earn its place. At 0.0 it
+# survives on any improvement at all, including one point of sampling noise -
+# which is how a table ends up showing "A -> C" at 74% and "A + B -> C" at 75%
+# as two findings when the extra item is doing nothing. At 0.05 the specialised
+# rule must beat its general form by five points of confidence.
+#
+# Declared here before the run. Adjusting it afterwards until the table looks
+# tidy is choosing the answer.
+redundancy_tolerance = 0.05
+
+# A blunter guard against rules whose consequent is so common that confidence
+# is high behind any antecedent. Lift already places these near independence,
+# so it is OFF by default; turning it on is a reportable choice, not a cleanup.
+drop_trivial = false
+max_consequent_support = 0.5
+
+[validation]
+# The RQ3 question. Mine on the earlier baskets, measure unchanged on the
+# later ones.
+#
+# Chronological, never random. A random split puts baskets from the same week
+# on both sides, so a seasonal pairing is "confirmed" by baskets a few days
+# from the ones that produced it.
+holdout_fraction = 0.25
+
+# A rule whose antecedent appears fewer than this many times in the hold-out
+# cannot be judged either way: one basket could carry it over any threshold.
+# Those are reported separately rather than counted as survivals.
+min_support_count = 5
+
+# Also mine the hold-out independently and compare the top-N lists. Survival
+# asks whether a given rule stayed true; overlap asks whether mining the second
+# period would have FOUND the same rules. A recommendation list rebuilt each
+# quarter lives on the second number.
+compare_rule_sets = true
+top_n = 50
+
+[colocation]
+# Jirapatsil & Phumchusri (2022) section 3.2: the rules are not the finding,
+# the rearrangement is. They move products in a known warehouse and measure
+# average picking distance falling from 31.8 m to 14.5 m, a 54.4% reduction.
+#
+# Online Retail II carries no layout, so metres cannot be computed and are not
+# reported. What is computed is the quantity a layout is chosen to minimise -
+# the number of distinct storage zones a picker must visit per historical order
+# - against two stated baselines, random assignment and popularity order.
+enabled = true
+
+# Products per zone. 20 matches the shelf unit in their warehouse (4 levels x
+# 5 columns). Change it to match yours and say which you used; the reduction
+# figures are not comparable across capacities.
+zone_capacity = 20
+
+# Which rule measure becomes shelf affinity. normalised_lift rather than lift,
+# because lift grows with the number of baskets containing neither product
+# (Ni et al. 2020 section 4.3) and would let two rare items decide the layout.
+affinity = "normalised_lift"
+
+# Random layouts to average the baseline over, so one lucky shuffle cannot
+# decide the result.
+random_seeds = 5
+
+[output]
+directory = "research/results"
+write_csv = true
+write_json = true
+
+# How many rules to write out in full. The complete set can run to thousands
+# and the CSV is for reading, not for archiving the whole mining output.
+max_rules_exported = 500
+
+[reproducibility]
+# Nothing here is stochastic - Apriori and Fisher are deterministic, and the
+# split is by date. The seed is recorded anyway so the results file has the
+# same shape as RQ1's and RQ2's, and so that adding any sampling later cannot
+# silently become unreproducible.
+random_seed = 20260101
