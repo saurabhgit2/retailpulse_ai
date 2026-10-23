@@ -28,9 +28,9 @@ results_directory = "research/results"
 # own config hash are recorded in the output.
 #
 # Set these to the directories cited in your results chapter:
-forecast = "latest:rq1-forecasting-weekly-total"
-segmentation = "latest:rq2-segmentation-stability"
-association = "latest:rq3-association-rules"
+forecast = "20261016T021001Z-rq1-forecasting-weekly-total"
+segmentation = "20261017T004117Z-rq2-segmentation-stability"
+association = "20261020T232331Z-rq3-association-rules"
 
 [ranking]
 # Weights for the three priority components. They are normalised, so they need
