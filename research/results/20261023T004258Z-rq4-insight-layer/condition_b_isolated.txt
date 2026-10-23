@@ -1,0 +1,38 @@
+Condition B - separate reports
+==============================
+
+Three reports, produced independently. They are not ordered against one another.
+
+Demand forecast report
+----------------------
+Reliability of this analysis: Hold-out WAPE 35.60 for combination_median; prediction intervals 25% observed against 80% nominal.
+
+  1. Prediction intervals covered 25% of hold-out observations against a nominal 80%, so the stated range understates how wrong the forecast can be.
+  2. Forecast revenue over the next 12 periods averages -35.6% against the most recent observed period. The interval spans -47.9% to -17.8%.
+
+Customer segmentation report
+----------------------------
+Reliability of this analysis: Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.
+
+  1. recent, frequent, high value holds 81.7% of revenue from 28.1% of customers.
+  2. 32% of recent, frequent, high value moved to lapsed occasional between 2011-04-04 -> 2011-08-06.
+  3. mid recency, mid frequency, mid value holds 12.5% of revenue from 40.7% of customers.
+  4. 25% of recent, frequent, high value moved to lapsed occasional between 2011-08-06 -> 2011-12-09.
+  5. lapsed occasional holds 5.8% of revenue from 31.2% of customers.
+  6. 17% of lapsed occasional moved to recent, frequent, high value between 2011-08-06 -> 2011-12-09.
+  7. 16% of mid recency, mid frequency, mid value moved to recent, frequent, high value between 2011-04-04 -> 2011-08-06.
+
+Market basket report
+--------------------
+Reliability of this analysis: 100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.
+
+  1. 0.0% of the 319 products introduced during the hold-out window can be recommended, since a rule can only name products that existed when it was mined.
+  2. No rule can reach 96.0% of the catalogue (4,547 of 4,734 products), because they never meet the minimum support threshold.
+  3. POPPY'S PLAYHOUSE KITCHEN is bought with POPPY'S PLAYHOUSE BEDROOM in 78% of baskets containing it, across 414 baskets.
+  4. POPPY'S PLAYHOUSE BEDROOM is bought with POPPY'S PLAYHOUSE KITCHEN in 82% of baskets containing it, across 414 baskets.
+  5. PINK REGENCY TEACUP AND SAUCER + ROSES REGENCY TEACUP AND SAUCER is bought with GREEN REGENCY TEACUP AND SAUCER in 92% of baskets containing it, across 478 baskets.
+  6. POPPY'S PLAYHOUSE BEDROOM is bought with POPPY'S PLAYHOUSE LIVINGROOM in 69% of baskets containing it, across 347 baskets.
+  7. POPPY'S PLAYHOUSE LIVINGROOM is bought with POPPY'S PLAYHOUSE BEDROOM in 83% of baskets containing it, across 347 baskets.
+  8. POPPY'S PLAYHOUSE KITCHEN is bought with POPPY'S PLAYHOUSE LIVINGROOM in 66% of baskets containing it, across 350 baskets.
+  9. POPPY'S PLAYHOUSE LIVINGROOM is bought with POPPY'S PLAYHOUSE KITCHEN in 84% of baskets containing it, across 350 baskets.
+  10. REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER is bought with GREEN REGENCY TEACUP AND SAUCER in 92% of baskets containing it, across 327 baskets.

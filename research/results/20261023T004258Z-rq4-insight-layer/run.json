@@ -1,0 +1,2987 @@
+{
+  "meta": {
+    "name": "rq4-insight-layer",
+    "research_question": "RQ4",
+    "description": "Reconcile the executed RQ1, RQ2 and RQ3 runs into ranked recommendations with\nevidence attached, and produce the isolated-component control condition from\nthe same signals.",
+    "author": "Saurabh Singh"
+  },
+  "config_hash": "1c4e24a44308b63361559839a5e26f63a483c13c692af88aaf1b29734a79a41a",
+  "run_at": "2026-10-23T00:42:58.527640+00:00",
+  "environment": {
+    "python": "3.12.1",
+    "numpy": "2.3.5",
+    "pandas": "2.3.3",
+    "scipy": "1.16.3"
+  },
+  "inputs": {
+    "forecast": {
+      "directory": "research\\results\\20261016T021001Z-rq1-forecasting-weekly-total",
+      "config_hash": "798b9ecf55bd6922212f23c413a3cdad2c8a20cc9d3f09fa157608eae91a53b3",
+      "meta": {
+        "name": "rq1-forecasting-weekly-total",
+        "research_question": "RQ1",
+        "description": "Compare baseline, statistical and learned forecasting families on weekly\nrevenue under one evaluation protocol, and test whether the observed ranking is\ndistinguishable from noise.",
+        "author": "Saurabh Singh"
+      }
+    },
+    "segmentation": {
+      "directory": "research\\results\\20261017T004117Z-rq2-segmentation-stability",
+      "config_hash": "610e6dcc1a4f6562a96c72337321033c0eaea1e1307c46d567ed263422d3054b",
+      "meta": {
+        "name": "rq2-segmentation-stability",
+        "research_question": "RQ2",
+        "description": "Cluster customers on RFM across several as-of dates and measure whether the\nresulting segments are stable, using three clustering families and five\nquality indices.",
+        "author": "Saurabh Singh"
+      }
+    },
+    "association": {
+      "directory": "research\\results\\20261020T232331Z-rq3-association-rules",
+      "config_hash": "dbee4674fb9001f332dd812b77c8d8be1bc97aefedb982a05cee98a07b021682",
+      "meta": {
+        "name": "rq3-association-rules",
+        "research_question": "RQ3",
+        "description": "Mine association rules on the earlier baskets, measure them unchanged on the\nlater ones, and report what share still holds.",
+        "author": "Saurabh Singh"
+      }
+    }
+  },
+  "reliability": {
+    "rows": [
+      {
+        "source": "forecast",
+        "score": 0.0,
+        "band": "weak",
+        "basis": "Hold-out WAPE 35.60 for combination_median; prediction intervals 25% observed against 80% nominal.",
+        "evidence": {
+          "model": "combination_median",
+          "holdout_wape": 35.5981835328,
+          "accuracy_component": 0.0,
+          "interval_component": 0.0,
+          "interval_coverage": {
+            "available": true,
+            "nominal": 0.8,
+            "observed": 0.25,
+            "points": 12,
+            "mean_width": 84039.21426878292,
+            "verdict": "too narrow - the interval understates the uncertainty",
+            "caveat": "Observed coverage is itself estimated from 12 points, so it carries its own uncertainty; do not read a gap of a few percentage points as a finding."
+          },
+          "selected_model_scored": true
+        }
+      },
+      {
+        "source": "segmentation",
+        "score": 0.221,
+        "band": "weak",
+        "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+        "evidence": {
+          "weakest_algorithm": "gaussian",
+          "mean_adjusted_rand": 0.2214560691760652,
+          "mean_retention_share": 0.6077116855385297,
+          "families_compared": [
+            "gaussian",
+            "hierarchical",
+            "kmeans"
+          ],
+          "all_scores": {
+            "kmeans": 0.3922773108690368,
+            "hierarchical": 0.26313785593462075,
+            "gaussian": 0.2214560691760652
+          }
+        }
+      },
+      {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    ],
+    "weak_sources": [
+      "forecast",
+      "segmentation"
+    ],
+    "unavailable_sources": [],
+    "note": "Each score comes from that engine's own out-of-sample evidence and is carried into every recommendation built from it. The three are deliberately not averaged, because they answer different questions and a combined figure would describe nothing.",
+    "caveat": "Evidence from forecast, segmentation is weak and every recommendation resting on it says so."
+  },
+  "procedural_fairness_correction": "Assessment One stated that the platform addresses procedural fairness by exposing which features drive each assignment. Wang et al. (2026) attribute that position to Grgic-Hlaca et al. (2018) and argue it does not capture the essence of procedural fairness, which they define over the consistency of the decision process between similar cases rather than over the identity of the features used. Exposing the drivers is a transparency property and is reported as one; procedural fairness is assessed separately here.",
+  "signals": [
+    {
+      "source": "forecast",
+      "kind": "demand_direction",
+      "subject": {
+        "scope": "business",
+        "key": "__TOTAL__",
+        "label": "Total weekly revenue"
+      },
+      "direction": -1,
+      "magnitude": -0.35598183532849453,
+      "summary": "Forecast revenue over the next 12 periods averages -35.6% against the most recent observed period. The interval spans -47.9% to -17.8%.",
+      "evidence": {
+        "horizon": 12,
+        "mean_forecast": 179850.2606387999,
+        "baseline": 279262.7141666667,
+        "model": "combination_median",
+        "interval_level": 0.8,
+        "scenarios": {
+          "pessimistic": -0.47886159740987283,
+          "central": -0.35598183532849453,
+          "optimistic": -0.17792914203515536
+        }
+      },
+      "reliability": {
+        "source": "forecast",
+        "score": 0.0,
+        "band": "weak",
+        "basis": "Hold-out WAPE 35.60 for combination_median; prediction intervals 25% observed against 80% nominal.",
+        "evidence": {
+          "model": "combination_median",
+          "holdout_wape": 35.5981835328,
+          "accuracy_component": 0.0,
+          "interval_component": 0.0,
+          "interval_coverage": {
+            "available": true,
+            "nominal": 0.8,
+            "observed": 0.25,
+            "points": 12,
+            "mean_width": 84039.21426878292,
+            "verdict": "too narrow - the interval understates the uncertainty",
+            "caveat": "Observed coverage is itself estimated from 12 points, so it carries its own uncertainty; do not read a gap of a few percentage points as a finding."
+          },
+          "selected_model_scored": true
+        }
+      }
+    },
+    {
+      "source": "forecast",
+      "kind": "interval_understates_risk",
+      "subject": {
+        "scope": "business",
+        "key": "__TOTAL__",
+        "label": "Total weekly revenue"
+      },
+      "direction": -1,
+      "magnitude": 0.55,
+      "summary": "Prediction intervals covered 25% of hold-out observations against a nominal 80%, so the stated range understates how wrong the forecast can be.",
+      "evidence": {
+        "available": true,
+        "nominal": 0.8,
+        "observed": 0.25,
+        "points": 12,
+        "mean_width": 84039.21426878292,
+        "verdict": "too narrow - the interval understates the uncertainty",
+        "caveat": "Observed coverage is itself estimated from 12 points, so it carries its own uncertainty; do not read a gap of a few percentage points as a finding."
+      },
+      "reliability": {
+        "source": "forecast",
+        "score": 0.0,
+        "band": "weak",
+        "basis": "Hold-out WAPE 35.60 for combination_median; prediction intervals 25% observed against 80% nominal.",
+        "evidence": {
+          "model": "combination_median",
+          "holdout_wape": 35.5981835328,
+          "accuracy_component": 0.0,
+          "interval_component": 0.0,
+          "interval_coverage": {
+            "available": true,
+            "nominal": 0.8,
+            "observed": 0.25,
+            "points": 12,
+            "mean_width": 84039.21426878292,
+            "verdict": "too narrow - the interval understates the uncertainty",
+            "caveat": "Observed coverage is itself estimated from 12 points, so it carries its own uncertainty; do not read a gap of a few percentage points as a finding."
+          },
+          "selected_model_scored": true
+        }
+      }
+    },
+    {
+      "source": "segmentation",
+      "kind": "revenue_concentration",
+      "subject": {
+        "scope": "segment",
+        "key": "1",
+        "label": "recent, frequent, high value"
+      },
+      "direction": 1,
+      "magnitude": 2.9098870059718878,
+      "summary": "recent, frequent, high value holds 81.7% of revenue from 28.1% of customers.",
+      "evidence": {
+        "customers": 1650,
+        "customer_share": 0.2808988764044944,
+        "revenue_share": 0.8173839904415415,
+        "median_recency_days": 22.0,
+        "median_frequency": 11.0,
+        "median_monetary": 3808.855,
+        "concentration_ratio": 2.9098870059718878
+      },
+      "reliability": {
+        "source": "segmentation",
+        "score": 0.221,
+        "band": "weak",
+        "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+        "evidence": {
+          "weakest_algorithm": "gaussian",
+          "mean_adjusted_rand": 0.2214560691760652,
+          "mean_retention_share": 0.6077116855385297,
+          "families_compared": [
+            "gaussian",
+            "hierarchical",
+            "kmeans"
+          ],
+          "all_scores": {
+            "kmeans": 0.3922773108690368,
+            "hierarchical": 0.26313785593462075,
+            "gaussian": 0.2214560691760652
+          }
+        }
+      }
+    },
+    {
+      "source": "segmentation",
+      "kind": "revenue_concentration",
+      "subject": {
+        "scope": "segment",
+        "key": "0",
+        "label": "mid recency, mid frequency, mid value"
+      },
+      "direction": -1,
+      "magnitude": 0.30638899383008616,
+      "summary": "mid recency, mid frequency, mid value holds 12.5% of revenue from 40.7% of customers.",
+      "evidence": {
+        "customers": 2393,
+        "customer_share": 0.4073884916581546,
+        "revenue_share": 0.12481935005709843,
+        "median_recency_days": 59.0,
+        "median_frequency": 3.0,
+        "median_monetary": 705.79,
+        "concentration_ratio": 0.30638899383008616
+      },
+      "reliability": {
+        "source": "segmentation",
+        "score": 0.221,
+        "band": "weak",
+        "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+        "evidence": {
+          "weakest_algorithm": "gaussian",
+          "mean_adjusted_rand": 0.2214560691760652,
+          "mean_retention_share": 0.6077116855385297,
+          "families_compared": [
+            "gaussian",
+            "hierarchical",
+            "kmeans"
+          ],
+          "all_scores": {
+            "kmeans": 0.3922773108690368,
+            "hierarchical": 0.26313785593462075,
+            "gaussian": 0.2214560691760652
+          }
+        }
+      }
+    },
+    {
+      "source": "segmentation",
+      "kind": "revenue_concentration",
+      "subject": {
+        "scope": "segment",
+        "key": "2",
+        "label": "lapsed occasional"
+      },
+      "direction": -1,
+      "magnitude": 0.18541648165537364,
+      "summary": "lapsed occasional holds 5.8% of revenue from 31.2% of customers.",
+      "evidence": {
+        "customers": 1831,
+        "customer_share": 0.31171263193735105,
+        "revenue_share": 0.057796659501360086,
+        "median_recency_days": 436.0,
+        "median_frequency": 1.0,
+        "median_monetary": 312.38,
+        "concentration_ratio": 0.18541648165537364
+      },
+      "reliability": {
+        "source": "segmentation",
+        "score": 0.221,
+        "band": "weak",
+        "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+        "evidence": {
+          "weakest_algorithm": "gaussian",
+          "mean_adjusted_rand": 0.2214560691760652,
+          "mean_retention_share": 0.6077116855385297,
+          "families_compared": [
+            "gaussian",
+            "hierarchical",
+            "kmeans"
+          ],
+          "all_scores": {
+            "kmeans": 0.3922773108690368,
+            "hierarchical": 0.26313785593462075,
+            "gaussian": 0.2214560691760652
+          }
+        }
+      }
+    },
+    {
+      "source": "segmentation",
+      "kind": "segment_outflow",
+      "subject": {
+        "scope": "segment",
+        "key": "1",
+        "label": "recent, frequent, high value"
+      },
+      "direction": -1,
+      "magnitude": 0.31894691411307724,
+      "summary": "32% of recent, frequent, high value moved to lapsed occasional between 2011-04-04 -> 2011-08-06.",
+      "evidence": {
+        "window": "2011-04-04 -> 2011-08-06",
+        "from": 1,
+        "to": 2,
+        "customers": 739,
+        "share_of_source": 0.31894691411307724
+      },
+      "reliability": {
+        "source": "segmentation",
+        "score": 0.221,
+        "band": "weak",
+        "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+        "evidence": {
+          "weakest_algorithm": "gaussian",
+          "mean_adjusted_rand": 0.2214560691760652,
+          "mean_retention_share": 0.6077116855385297,
+          "families_compared": [
+            "gaussian",
+            "hierarchical",
+            "kmeans"
+          ],
+          "all_scores": {
+            "kmeans": 0.3922773108690368,
+            "hierarchical": 0.26313785593462075,
+            "gaussian": 0.2214560691760652
+          }
+        }
+      }
+    },
+    {
+      "source": "segmentation",
+      "kind": "segment_outflow",
+      "subject": {
+        "scope": "segment",
+        "key": "0",
+        "label": "mid recency, mid frequency, mid value"
+      },
+      "direction": -1,
+      "magnitude": 0.15771812080536912,
+      "summary": "16% of mid recency, mid frequency, mid value moved to recent, frequent, high value between 2011-04-04 -> 2011-08-06.",
+      "evidence": {
+        "window": "2011-04-04 -> 2011-08-06",
+        "from": 0,
+        "to": 1,
+        "customers": 235,
+        "share_of_source": 0.15771812080536912
+      },
+      "reliability": {
+        "source": "segmentation",
+        "score": 0.221,
+        "band": "weak",
+        "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+        "evidence": {
+          "weakest_algorithm": "gaussian",
+          "mean_adjusted_rand": 0.2214560691760652,
+          "mean_retention_share": 0.6077116855385297,
+          "families_compared": [
+            "gaussian",
+            "hierarchical",
+            "kmeans"
+          ],
+          "all_scores": {
+            "kmeans": 0.3922773108690368,
+            "hierarchical": 0.26313785593462075,
+            "gaussian": 0.2214560691760652
+          }
+        }
+      }
+    },
+    {
+      "source": "segmentation",
+      "kind": "segment_outflow",
+      "subject": {
+        "scope": "segment",
+        "key": "1",
+        "label": "recent, frequent, high value"
+      },
+      "direction": -1,
+      "magnitude": 0.24742729306487696,
+      "summary": "25% of recent, frequent, high value moved to lapsed occasional between 2011-08-06 -> 2011-12-09.",
+      "evidence": {
+        "window": "2011-08-06 -> 2011-12-09",
+        "from": 1,
+        "to": 2,
+        "customers": 553,
+        "share_of_source": 0.24742729306487696
+      },
+      "reliability": {
+        "source": "segmentation",
+        "score": 0.221,
+        "band": "weak",
+        "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+        "evidence": {
+          "weakest_algorithm": "gaussian",
+          "mean_adjusted_rand": 0.2214560691760652,
+          "mean_retention_share": 0.6077116855385297,
+          "families_compared": [
+            "gaussian",
+            "hierarchical",
+            "kmeans"
+          ],
+          "all_scores": {
+            "kmeans": 0.3922773108690368,
+            "hierarchical": 0.26313785593462075,
+            "gaussian": 0.2214560691760652
+          }
+        }
+      }
+    },
+    {
+      "source": "segmentation",
+      "kind": "segment_outflow",
+      "subject": {
+        "scope": "segment",
+        "key": "2",
+        "label": "lapsed occasional"
+      },
+      "direction": -1,
+      "magnitude": 0.17261518494484102,
+      "summary": "17% of lapsed occasional moved to recent, frequent, high value between 2011-08-06 -> 2011-12-09.",
+      "evidence": {
+        "window": "2011-08-06 -> 2011-12-09",
+        "from": 2,
+        "to": 1,
+        "customers": 266,
+        "share_of_source": 0.17261518494484102
+      },
+      "reliability": {
+        "source": "segmentation",
+        "score": 0.221,
+        "band": "weak",
+        "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+        "evidence": {
+          "weakest_algorithm": "gaussian",
+          "mean_adjusted_rand": 0.2214560691760652,
+          "mean_retention_share": 0.6077116855385297,
+          "families_compared": [
+            "gaussian",
+            "hierarchical",
+            "kmeans"
+          ],
+          "all_scores": {
+            "kmeans": 0.3922773108690368,
+            "hierarchical": 0.26313785593462075,
+            "gaussian": 0.2214560691760652
+          }
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "POPPY'S PLAYHOUSE KITCHEN -> POPPY'S PLAYHOUSE BEDROOM",
+        "label": "POPPY'S PLAYHOUSE KITCHEN -> POPPY'S PLAYHOUSE BEDROOM"
+      },
+      "direction": 1,
+      "magnitude": 0.9597681719391451,
+      "summary": "POPPY'S PLAYHOUSE KITCHEN is bought with POPPY'S PLAYHOUSE BEDROOM in 78% of baskets containing it, across 414 baskets.",
+      "evidence": {
+        "antecedent": [
+          "POPPY'S PLAYHOUSE KITCHEN"
+        ],
+        "consequent": [
+          "POPPY'S PLAYHOUSE BEDROOM"
+        ],
+        "support_count": 414,
+        "confidence": 0.776735459662289,
+        "lift": 45.59975479724333,
+        "normalised_lift": 0.9597681719391451,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "POPPY'S PLAYHOUSE BEDROOM -> POPPY'S PLAYHOUSE KITCHEN",
+        "label": "POPPY'S PLAYHOUSE BEDROOM -> POPPY'S PLAYHOUSE KITCHEN"
+      },
+      "direction": 1,
+      "magnitude": 0.9597681719391451,
+      "summary": "POPPY'S PLAYHOUSE BEDROOM is bought with POPPY'S PLAYHOUSE KITCHEN in 82% of baskets containing it, across 414 baskets.",
+      "evidence": {
+        "antecedent": [
+          "POPPY'S PLAYHOUSE BEDROOM"
+        ],
+        "consequent": [
+          "POPPY'S PLAYHOUSE KITCHEN"
+        ],
+        "support_count": 414,
+        "confidence": 0.8198019801980198,
+        "lift": 45.59975479724333,
+        "normalised_lift": 0.9597681719391451,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "PINK REGENCY TEACUP AND SAUCER + ROSES REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER",
+        "label": "PINK REGENCY TEACUP AND SAUCER + ROSES REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER"
+      },
+      "direction": 1,
+      "magnitude": 0.9590326700449059,
+      "summary": "PINK REGENCY TEACUP AND SAUCER + ROSES REGENCY TEACUP AND SAUCER is bought with GREEN REGENCY TEACUP AND SAUCER in 92% of baskets containing it, across 478 baskets.",
+      "evidence": {
+        "antecedent": [
+          "PINK REGENCY TEACUP AND SAUCER",
+          "ROSES REGENCY TEACUP AND SAUCER"
+        ],
+        "consequent": [
+          "GREEN REGENCY TEACUP AND SAUCER"
+        ],
+        "support_count": 478,
+        "confidence": 0.9157088122605364,
+        "lift": 29.191418448481848,
+        "normalised_lift": 0.9590326700449059,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "POPPY'S PLAYHOUSE BEDROOM -> POPPY'S PLAYHOUSE LIVINGROOM",
+        "label": "POPPY'S PLAYHOUSE BEDROOM -> POPPY'S PLAYHOUSE LIVINGROOM"
+      },
+      "direction": 1,
+      "magnitude": 0.9481054836252856,
+      "summary": "POPPY'S PLAYHOUSE BEDROOM is bought with POPPY'S PLAYHOUSE LIVINGROOM in 69% of baskets containing it, across 347 baskets.",
+      "evidence": {
+        "antecedent": [
+          "POPPY'S PLAYHOUSE BEDROOM"
+        ],
+        "consequent": [
+          "POPPY'S PLAYHOUSE LIVINGROOM"
+        ],
+        "support_count": 347,
+        "confidence": 0.6871287128712872,
+        "lift": 48.969483054074644,
+        "normalised_lift": 0.9481054836252856,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "POPPY'S PLAYHOUSE LIVINGROOM -> POPPY'S PLAYHOUSE BEDROOM",
+        "label": "POPPY'S PLAYHOUSE LIVINGROOM -> POPPY'S PLAYHOUSE BEDROOM"
+      },
+      "direction": 1,
+      "magnitude": 0.9481054836252856,
+      "summary": "POPPY'S PLAYHOUSE LIVINGROOM is bought with POPPY'S PLAYHOUSE BEDROOM in 83% of baskets containing it, across 347 baskets.",
+      "evidence": {
+        "antecedent": [
+          "POPPY'S PLAYHOUSE LIVINGROOM"
+        ],
+        "consequent": [
+          "POPPY'S PLAYHOUSE BEDROOM"
+        ],
+        "support_count": 347,
+        "confidence": 0.8341346153846154,
+        "lift": 48.969483054074644,
+        "normalised_lift": 0.9481054836252856,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "POPPY'S PLAYHOUSE KITCHEN -> POPPY'S PLAYHOUSE LIVINGROOM",
+        "label": "POPPY'S PLAYHOUSE KITCHEN -> POPPY'S PLAYHOUSE LIVINGROOM"
+      },
+      "direction": 1,
+      "magnitude": 0.9455278539471785,
+      "summary": "POPPY'S PLAYHOUSE KITCHEN is bought with POPPY'S PLAYHOUSE LIVINGROOM in 66% of baskets containing it, across 350 baskets.",
+      "evidence": {
+        "antecedent": [
+          "POPPY'S PLAYHOUSE KITCHEN"
+        ],
+        "consequent": [
+          "POPPY'S PLAYHOUSE LIVINGROOM"
+        ],
+        "support_count": 350,
+        "confidence": 0.6566604127579737,
+        "lift": 46.79810398325877,
+        "normalised_lift": 0.9455278539471785,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "POPPY'S PLAYHOUSE LIVINGROOM -> POPPY'S PLAYHOUSE KITCHEN",
+        "label": "POPPY'S PLAYHOUSE LIVINGROOM -> POPPY'S PLAYHOUSE KITCHEN"
+      },
+      "direction": 1,
+      "magnitude": 0.9455278539471785,
+      "summary": "POPPY'S PLAYHOUSE LIVINGROOM is bought with POPPY'S PLAYHOUSE KITCHEN in 84% of baskets containing it, across 350 baskets.",
+      "evidence": {
+        "antecedent": [
+          "POPPY'S PLAYHOUSE LIVINGROOM"
+        ],
+        "consequent": [
+          "POPPY'S PLAYHOUSE KITCHEN"
+        ],
+        "support_count": 350,
+        "confidence": 0.8413461538461539,
+        "lift": 46.79810398325877,
+        "normalised_lift": 0.9455278539471785,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER",
+        "label": "REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER"
+      },
+      "direction": 1,
+      "magnitude": 0.9455136893467064,
+      "summary": "REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER is bought with GREEN REGENCY TEACUP AND SAUCER in 92% of baskets containing it, across 327 baskets.",
+      "evidence": {
+        "antecedent": [
+          "REGENCY CAKESTAND 3 TIER",
+          "PINK REGENCY TEACUP AND SAUCER"
+        ],
+        "consequent": [
+          "GREEN REGENCY TEACUP AND SAUCER"
+        ],
+        "support_count": 327,
+        "confidence": 0.9159663865546218,
+        "lift": 29.199629529231043,
+        "normalised_lift": 0.9455136893467064,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "ROSES REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER",
+        "label": "ROSES REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER"
+      },
+      "direction": 1,
+      "magnitude": 0.9388794567062818,
+      "summary": "ROSES REGENCY TEACUP AND SAUCER is bought with GREEN REGENCY TEACUP AND SAUCER in 74% of baskets containing it, across 714 baskets.",
+      "evidence": {
+        "antecedent": [
+          "ROSES REGENCY TEACUP AND SAUCER"
+        ],
+        "consequent": [
+          "GREEN REGENCY TEACUP AND SAUCER"
+        ],
+        "support_count": 714,
+        "confidence": 0.7368421052631579,
+        "lift": 23.48941709111488,
+        "normalised_lift": 0.9388794567062818,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "GREEN REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER",
+        "label": "GREEN REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER"
+      },
+      "direction": 1,
+      "magnitude": 0.9388794567062818,
+      "summary": "GREEN REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 77% of baskets containing it, across 714 baskets.",
+      "evidence": {
+        "antecedent": [
+          "GREEN REGENCY TEACUP AND SAUCER"
+        ],
+        "consequent": [
+          "ROSES REGENCY TEACUP AND SAUCER"
+        ],
+        "support_count": 714,
+        "confidence": 0.7677419354838709,
+        "lift": 23.48941709111488,
+        "normalised_lift": 0.9388794567062818,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "GREEN REGENCY TEACUP AND SAUCER -> PINK REGENCY TEACUP AND SAUCER",
+        "label": "GREEN REGENCY TEACUP AND SAUCER -> PINK REGENCY TEACUP AND SAUCER"
+      },
+      "direction": 1,
+      "magnitude": 0.9371449083818755,
+      "summary": "GREEN REGENCY TEACUP AND SAUCER is bought with PINK REGENCY TEACUP AND SAUCER in 60% of baskets containing it, across 556 baskets.",
+      "evidence": {
+        "antecedent": [
+          "GREEN REGENCY TEACUP AND SAUCER"
+        ],
+        "consequent": [
+          "PINK REGENCY TEACUP AND SAUCER"
+        ],
+        "support_count": 556,
+        "confidence": 0.5978494623655914,
+        "lift": 26.895968149852337,
+        "normalised_lift": 0.9371449083818755,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "PINK REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER",
+        "label": "PINK REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER"
+      },
+      "direction": 1,
+      "magnitude": 0.9371449083818755,
+      "summary": "PINK REGENCY TEACUP AND SAUCER is bought with GREEN REGENCY TEACUP AND SAUCER in 84% of baskets containing it, across 556 baskets.",
+      "evidence": {
+        "antecedent": [
+          "PINK REGENCY TEACUP AND SAUCER"
+        ],
+        "consequent": [
+          "GREEN REGENCY TEACUP AND SAUCER"
+        ],
+        "support_count": 556,
+        "confidence": 0.8437025796661608,
+        "lift": 26.89596814985233,
+        "normalised_lift": 0.9371449083818755,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "POPPY'S PLAYHOUSE BEDROOM + POPPY'S PLAYHOUSE KITCHEN -> POPPY'S PLAYHOUSE LIVINGROOM",
+        "label": "POPPY'S PLAYHOUSE BEDROOM + POPPY'S PLAYHOUSE KITCHEN -> POPPY'S PLAYHOUSE LIVINGROOM"
+      },
+      "direction": 1,
+      "magnitude": 0.9347651895206243,
+      "summary": "POPPY'S PLAYHOUSE BEDROOM + POPPY'S PLAYHOUSE KITCHEN is bought with POPPY'S PLAYHOUSE LIVINGROOM in 75% of baskets containing it, across 309 baskets.",
+      "evidence": {
+        "antecedent": [
+          "POPPY'S PLAYHOUSE BEDROOM",
+          "POPPY'S PLAYHOUSE KITCHEN"
+        ],
+        "consequent": [
+          "POPPY'S PLAYHOUSE LIVINGROOM"
+        ],
+        "support_count": 309,
+        "confidence": 0.7463768115942029,
+        "lift": 53.19190705128205,
+        "normalised_lift": 0.9347651895206243,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER",
+        "label": "GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER"
+      },
+      "direction": 1,
+      "magnitude": 0.9289150722765441,
+      "summary": "GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 86% of baskets containing it, across 478 baskets.",
+      "evidence": {
+        "antecedent": [
+          "GREEN REGENCY TEACUP AND SAUCER",
+          "PINK REGENCY TEACUP AND SAUCER"
+        ],
+        "consequent": [
+          "ROSES REGENCY TEACUP AND SAUCER"
+        ],
+        "support_count": 478,
+        "confidence": 0.8597122302158273,
+        "lift": 26.30329049453935,
+        "normalised_lift": 0.9289150722765441,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "SET/20 RED RETROSPOT PAPER NAPKINS + SET/6 RED SPOTTY PAPER CUPS -> SET/6 RED SPOTTY PAPER PLATES",
+        "label": "SET/20 RED RETROSPOT PAPER NAPKINS + SET/6 RED SPOTTY PAPER CUPS -> SET/6 RED SPOTTY PAPER PLATES"
+      },
+      "direction": 1,
+      "magnitude": 0.9250849110535696,
+      "summary": "SET/20 RED RETROSPOT PAPER NAPKINS + SET/6 RED SPOTTY PAPER CUPS is bought with SET/6 RED SPOTTY PAPER PLATES in 85% of baskets containing it, across 387 baskets.",
+      "evidence": {
+        "antecedent": [
+          "SET/20 RED RETROSPOT PAPER NAPKINS",
+          "SET/6 RED SPOTTY PAPER CUPS"
+        ],
+        "consequent": [
+          "SET/6 RED SPOTTY PAPER PLATES"
+        ],
+        "support_count": 387,
+        "confidence": 0.8524229074889867,
+        "lift": 32.15239432356996,
+        "normalised_lift": 0.9250849110535696,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "SET/6 RED SPOTTY PAPER PLATES -> SET/6 RED SPOTTY PAPER CUPS",
+        "label": "SET/6 RED SPOTTY PAPER PLATES -> SET/6 RED SPOTTY PAPER CUPS"
+      },
+      "direction": 1,
+      "magnitude": 0.9212542818348276,
+      "summary": "SET/6 RED SPOTTY PAPER PLATES is bought with SET/6 RED SPOTTY PAPER CUPS in 67% of baskets containing it, across 530 baskets.",
+      "evidence": {
+        "antecedent": [
+          "SET/6 RED SPOTTY PAPER PLATES"
+        ],
+        "consequent": [
+          "SET/6 RED SPOTTY PAPER CUPS"
+        ],
+        "support_count": 530,
+        "confidence": 0.6743002544529262,
+        "lift": 28.599398631997,
+        "normalised_lift": 0.9212542818348276,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "SET/6 RED SPOTTY PAPER CUPS -> SET/6 RED SPOTTY PAPER PLATES",
+        "label": "SET/6 RED SPOTTY PAPER CUPS -> SET/6 RED SPOTTY PAPER PLATES"
+      },
+      "direction": 1,
+      "magnitude": 0.9212542818348276,
+      "summary": "SET/6 RED SPOTTY PAPER CUPS is bought with SET/6 RED SPOTTY PAPER PLATES in 76% of baskets containing it, across 530 baskets.",
+      "evidence": {
+        "antecedent": [
+          "SET/6 RED SPOTTY PAPER CUPS"
+        ],
+        "consequent": [
+          "SET/6 RED SPOTTY PAPER PLATES"
+        ],
+        "support_count": 530,
+        "confidence": 0.7582260371959942,
+        "lift": 28.599398631996998,
+        "normalised_lift": 0.9212542818348276,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "durable_pairing",
+      "subject": {
+        "scope": "product",
+        "key": "SET/10 BLUE SPOTTY PARTY CANDLES -> SET/10 PINK POLKADOT PARTY CANDLES",
+        "label": "SET/10 BLUE SPOTTY PARTY CANDLES -> SET/10 PINK POLKADOT PARTY CANDLES"
+      },
+      "direction": 1,
+      "magnitude": 0.917091016957532,
+      "summary": "SET/10 BLUE SPOTTY PARTY CANDLES is bought with SET/10 PINK POLKADOT PARTY CANDLES in 78% of baskets containing it, across 420 baskets.",
+      "evidence": {
+        "antecedent": [
+          "SET/10 BLUE SPOTTY PARTY CANDLES"
+        ],
+        "consequent": [
+          "SET/10 PINK POLKADOT PARTY CANDLES"
+        ],
+        "support_count": 420,
+        "confidence": 0.7821229050279329,
+        "lift": 34.19999670407541,
+        "normalised_lift": 0.917091016957532,
+        "q_value": 0.0,
+        "held_on_holdout": true
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "durable_pairing",
+      "subject": {
+        "scope": "product",
+        "key": "SET/10 PINK POLKADOT PARTY CANDLES -> SET/10 BLUE SPOTTY PARTY CANDLES",
+        "label": "SET/10 PINK POLKADOT PARTY CANDLES -> SET/10 BLUE SPOTTY PARTY CANDLES"
+      },
+      "direction": 1,
+      "magnitude": 0.917091016957532,
+      "summary": "SET/10 PINK POLKADOT PARTY CANDLES is bought with SET/10 BLUE SPOTTY PARTY CANDLES in 62% of baskets containing it, across 420 baskets.",
+      "evidence": {
+        "antecedent": [
+          "SET/10 PINK POLKADOT PARTY CANDLES"
+        ],
+        "consequent": [
+          "SET/10 BLUE SPOTTY PARTY CANDLES"
+        ],
+        "support_count": 420,
+        "confidence": 0.6194690265486725,
+        "lift": 34.19999670407541,
+        "normalised_lift": 0.917091016957532,
+        "q_value": 0.0,
+        "held_on_holdout": true
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "durable_pairing",
+      "subject": {
+        "scope": "product",
+        "key": "RED RETROSPOT CUP + PINK POLKADOT CUP -> BLUE POLKADOT CUP",
+        "label": "RED RETROSPOT CUP + PINK POLKADOT CUP -> BLUE POLKADOT CUP"
+      },
+      "direction": 1,
+      "magnitude": 0.9109226044275108,
+      "summary": "RED RETROSPOT CUP + PINK POLKADOT CUP is bought with BLUE POLKADOT CUP in 82% of baskets containing it, across 319 baskets.",
+      "evidence": {
+        "antecedent": [
+          "RED RETROSPOT CUP",
+          "PINK POLKADOT CUP"
+        ],
+        "consequent": [
+          "BLUE POLKADOT CUP"
+        ],
+        "support_count": 319,
+        "confidence": 0.8242894056847545,
+        "lift": 37.77080063421317,
+        "normalised_lift": 0.9109226044275108,
+        "q_value": 0.0,
+        "held_on_holdout": true
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "GREEN REGENCY TEACUP AND SAUCER + ROSES REGENCY TEACUP AND SAUCER -> PINK REGENCY TEACUP AND SAUCER",
+        "label": "GREEN REGENCY TEACUP AND SAUCER + ROSES REGENCY TEACUP AND SAUCER -> PINK REGENCY TEACUP AND SAUCER"
+      },
+      "direction": 1,
+      "magnitude": 0.9092164938813158,
+      "summary": "GREEN REGENCY TEACUP AND SAUCER + ROSES REGENCY TEACUP AND SAUCER is bought with PINK REGENCY TEACUP AND SAUCER in 67% of baskets containing it, across 478 baskets.",
+      "evidence": {
+        "antecedent": [
+          "GREEN REGENCY TEACUP AND SAUCER",
+          "ROSES REGENCY TEACUP AND SAUCER"
+        ],
+        "consequent": [
+          "PINK REGENCY TEACUP AND SAUCER"
+        ],
+        "support_count": 478,
+        "confidence": 0.6694677871148459,
+        "lift": 30.117923345362424,
+        "normalised_lift": 0.9092164938813158,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "durable_pairing",
+      "subject": {
+        "scope": "product",
+        "key": "PINK POLKADOT CUP -> BLUE POLKADOT CUP",
+        "label": "PINK POLKADOT CUP -> BLUE POLKADOT CUP"
+      },
+      "direction": 1,
+      "magnitude": 0.9055486122922876,
+      "summary": "PINK POLKADOT CUP is bought with BLUE POLKADOT CUP in 70% of baskets containing it, across 441 baskets.",
+      "evidence": {
+        "antecedent": [
+          "PINK POLKADOT CUP"
+        ],
+        "consequent": [
+          "BLUE POLKADOT CUP"
+        ],
+        "support_count": 441,
+        "confidence": 0.7033492822966507,
+        "lift": 32.229051270863685,
+        "normalised_lift": 0.9055486122922876,
+        "q_value": 0.0,
+        "held_on_holdout": true
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "durable_pairing",
+      "subject": {
+        "scope": "product",
+        "key": "BLUE POLKADOT CUP -> PINK POLKADOT CUP",
+        "label": "BLUE POLKADOT CUP -> PINK POLKADOT CUP"
+      },
+      "direction": 1,
+      "magnitude": 0.9055486122922876,
+      "summary": "BLUE POLKADOT CUP is bought with PINK POLKADOT CUP in 68% of baskets containing it, across 441 baskets.",
+      "evidence": {
+        "antecedent": [
+          "BLUE POLKADOT CUP"
+        ],
+        "consequent": [
+          "PINK POLKADOT CUP"
+        ],
+        "support_count": 441,
+        "confidence": 0.6816074188562596,
+        "lift": 32.229051270863685,
+        "normalised_lift": 0.9055486122922876,
+        "q_value": 0.0,
+        "held_on_holdout": true
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "ROSES REGENCY TEACUP AND SAUCER -> PINK REGENCY TEACUP AND SAUCER",
+        "label": "ROSES REGENCY TEACUP AND SAUCER -> PINK REGENCY TEACUP AND SAUCER"
+      },
+      "direction": 1,
+      "magnitude": 0.9040999356375407,
+      "summary": "ROSES REGENCY TEACUP AND SAUCER is bought with PINK REGENCY TEACUP AND SAUCER in 54% of baskets containing it, across 522 baskets.",
+      "evidence": {
+        "antecedent": [
+          "ROSES REGENCY TEACUP AND SAUCER"
+        ],
+        "consequent": [
+          "PINK REGENCY TEACUP AND SAUCER"
+        ],
+        "support_count": 522,
+        "confidence": 0.5386996904024768,
+        "lift": 24.234946466407028,
+        "normalised_lift": 0.9040999356375407,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "pairing",
+      "subject": {
+        "scope": "product",
+        "key": "PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER",
+        "label": "PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER"
+      },
+      "direction": 1,
+      "magnitude": 0.9040999356375407,
+      "summary": "PINK REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 79% of baskets containing it, across 522 baskets.",
+      "evidence": {
+        "antecedent": [
+          "PINK REGENCY TEACUP AND SAUCER"
+        ],
+        "consequent": [
+          "ROSES REGENCY TEACUP AND SAUCER"
+        ],
+        "support_count": 522,
+        "confidence": 0.7921092564491654,
+        "lift": 24.234946466407024,
+        "normalised_lift": 0.9040999356375407,
+        "q_value": 0.0,
+        "held_on_holdout": false
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "catalogue_blind_spot",
+      "subject": {
+        "scope": "business",
+        "key": "__CATALOGUE__",
+        "label": "Product catalogue"
+      },
+      "direction": -1,
+      "magnitude": 0.9604985213350232,
+      "summary": "No rule can reach 96.0% of the catalogue (4,547 of 4,734 products), because they never meet the minimum support threshold.",
+      "evidence": {
+        "available": true,
+        "catalogue_size": 4734,
+        "reachable": 187,
+        "item_coverage": 0.03950147866497676,
+        "threshold": 1,
+        "verdict": "4.0% of the catalogue can ever be recommended (187 of 4,734 products). The remaining 96.0% never clears minimum support, so no rule reaches them however a customer behaves. This is the popularity bias of Kathriarachchi et al. (2026) \u00a73.2 measured rather than asserted, and it is a property of the support threshold, not a defect in the data."
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    {
+      "source": "association",
+      "kind": "new_product_blind_spot",
+      "subject": {
+        "scope": "business",
+        "key": "__NEW_PRODUCTS__",
+        "label": "Newly listed products"
+      },
+      "direction": -1,
+      "magnitude": 1.0,
+      "summary": "0.0% of the 319 products introduced during the hold-out window can be recommended, since a rule can only name products that existed when it was mined.",
+      "evidence": {
+        "available": true,
+        "new_items": 319,
+        "covered": 0,
+        "coverage_new": 0.0,
+        "threshold": 1,
+        "verdict": "0.0% of the 319 products new to the hold-out window can be recommended by rules mined before they existed. A rule can only name products present when it was mined, so this is a structural limit of association rules rather than a result about this dataset: every new product is invisible to the method until the rules are mined again."
+      },
+      "reliability": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    }
+  ],
+  "scopes": {
+    "forecast": [
+      "business"
+    ],
+    "segmentation": [
+      "segment"
+    ],
+    "association": [
+      "business",
+      "product"
+    ]
+  },
+  "integration": {
+    "findings": 31,
+    "corroborated": 0,
+    "corroborated_share": 0.0,
+    "with_conflicts": 1,
+    "findings_by_scope": {
+      "product": 25,
+      "business": 3,
+      "segment": 3
+    },
+    "sources_by_scope": {
+      "business": [
+        "association",
+        "forecast"
+      ],
+      "segment": [
+        "segmentation"
+      ],
+      "product": [
+        "association"
+      ]
+    },
+    "scopes_with_multiple_sources": [
+      "business"
+    ],
+    "note": "0 of 31 findings drew on more than one engine. Direct agreement is only possible where two engines speak about the same kind of subject, which on this configuration happens at business scope.",
+    "limitation": "The forecasting experiment targets total weekly revenue, so it produces no product-level signal and cannot corroborate a product pairing. Configuring a per-product forecast target would make that join available without changing this module."
+  },
+  "ranking": {
+    "weights": {
+      "revenue_at_stake": 0.4,
+      "evidence_weight": 0.4,
+      "corroboration": 0.2
+    },
+    "components": {
+      "revenue_at_stake": "Share of the largest monetary quantity in the set. Zero where no monetary quantity could be attached.",
+      "evidence_weight": "Reliability of the engine that produced the signal, computed from its out-of-sample performance.",
+      "corroboration": "One where more than one engine spoke about the subject, zero otherwise. Only an integrated view can compute this term."
+    },
+    "excluded": "Margin contribution and inventory feasibility were proposed in Assessment One and are absent here, because Online Retail II records neither product cost nor stock level. A proxy would have made the score look more complete without making it more informative."
+  },
+  "condition_a_integrated": {
+    "recommendations": [
+      {
+        "key": "concentration::1",
+        "template": "protect_concentrated_revenue",
+        "action": "Handle recent, frequent, high value separately from the general customer base for service levels, stock allocation and contact frequency.",
+        "subject": {
+          "scope": "segment",
+          "key": "1",
+          "label": "recent, frequent, high value"
+        },
+        "rationale": "recent, frequent, high value holds 81.7% of revenue from 28.1% of customers. That is 2.9 times the revenue its size would imply, so a change in this group moves the business total more than its customer count suggests.",
+        "priority": 0.4886,
+        "corroborated": false,
+        "sources": [
+          "segmentation"
+        ],
+        "silent_sources": [
+          "association",
+          "forecast"
+        ],
+        "evidence_weight": 0.221,
+        "revenue_at_stake": 13359289.25,
+        "evidence": [
+          {
+            "source": "segmentation",
+            "kind": "revenue_concentration",
+            "subject": {
+              "scope": "segment",
+              "key": "1",
+              "label": "recent, frequent, high value"
+            },
+            "direction": 1,
+            "magnitude": 2.9098870059718878,
+            "summary": "recent, frequent, high value holds 81.7% of revenue from 28.1% of customers.",
+            "evidence": {
+              "customers": 1650,
+              "customer_share": 0.2808988764044944,
+              "revenue_share": 0.8173839904415415,
+              "median_recency_days": 22.0,
+              "median_frequency": 11.0,
+              "median_monetary": 3808.855,
+              "concentration_ratio": 2.9098870059718878
+            },
+            "reliability": {
+              "source": "segmentation",
+              "score": 0.221,
+              "band": "weak",
+              "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+              "evidence": {
+                "weakest_algorithm": "gaussian",
+                "mean_adjusted_rand": 0.2214560691760652,
+                "mean_retention_share": 0.6077116855385297,
+                "families_compared": [
+                  "gaussian",
+                  "hierarchical",
+                  "kmeans"
+                ],
+                "all_scores": {
+                  "kmeans": 0.3922773108690368,
+                  "hierarchical": 0.26313785593462075,
+                  "gaussian": 0.2214560691760652
+                }
+              }
+            }
+          },
+          {
+            "source": "segmentation",
+            "kind": "segment_outflow",
+            "subject": {
+              "scope": "segment",
+              "key": "1",
+              "label": "recent, frequent, high value"
+            },
+            "direction": -1,
+            "magnitude": 0.31894691411307724,
+            "summary": "32% of recent, frequent, high value moved to lapsed occasional between 2011-04-04 -> 2011-08-06.",
+            "evidence": {
+              "window": "2011-04-04 -> 2011-08-06",
+              "from": 1,
+              "to": 2,
+              "customers": 739,
+              "share_of_source": 0.31894691411307724
+            },
+            "reliability": {
+              "source": "segmentation",
+              "score": 0.221,
+              "band": "weak",
+              "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+              "evidence": {
+                "weakest_algorithm": "gaussian",
+                "mean_adjusted_rand": 0.2214560691760652,
+                "mean_retention_share": 0.6077116855385297,
+                "families_compared": [
+                  "gaussian",
+                  "hierarchical",
+                  "kmeans"
+                ],
+                "all_scores": {
+                  "kmeans": 0.3922773108690368,
+                  "hierarchical": 0.26313785593462075,
+                  "gaussian": 0.2214560691760652
+                }
+              }
+            }
+          },
+          {
+            "source": "segmentation",
+            "kind": "segment_outflow",
+            "subject": {
+              "scope": "segment",
+              "key": "1",
+              "label": "recent, frequent, high value"
+            },
+            "direction": -1,
+            "magnitude": 0.24742729306487696,
+            "summary": "25% of recent, frequent, high value moved to lapsed occasional between 2011-08-06 -> 2011-12-09.",
+            "evidence": {
+              "window": "2011-08-06 -> 2011-12-09",
+              "from": 1,
+              "to": 2,
+              "customers": 553,
+              "share_of_source": 0.24742729306487696
+            },
+            "reliability": {
+              "source": "segmentation",
+              "score": 0.221,
+              "band": "weak",
+              "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+              "evidence": {
+                "weakest_algorithm": "gaussian",
+                "mean_adjusted_rand": 0.2214560691760652,
+                "mean_retention_share": 0.6077116855385297,
+                "families_compared": [
+                  "gaussian",
+                  "hierarchical",
+                  "kmeans"
+                ],
+                "all_scores": {
+                  "kmeans": 0.3922773108690368,
+                  "hierarchical": 0.26313785593462075,
+                  "gaussian": 0.2214560691760652
+                }
+              }
+            }
+          },
+          {
+            "source": "ranking",
+            "kind": "priority_components",
+            "summary": "Priority 0.489 from revenue 1.00, evidence 0.22, corroboration 0.",
+            "evidence": {
+              "components": {
+                "revenue_at_stake": 1.0,
+                "evidence_weight": 0.2214560691760652,
+                "corroboration": 0.0
+              },
+              "weights": {
+                "revenue_at_stake": 0.4,
+                "evidence_weight": 0.4,
+                "corroboration": 0.2
+              }
+            }
+          },
+          {
+            "source": "ranking",
+            "kind": "priority_components",
+            "summary": "Priority 0.089 from revenue 0.00, evidence 0.22, corroboration 0.",
+            "evidence": {
+              "components": {
+                "revenue_at_stake": 0.0,
+                "evidence_weight": 0.2214560691760652,
+                "corroboration": 0.0
+              },
+              "weights": {
+                "revenue_at_stake": 0.4,
+                "evidence_weight": 0.4,
+                "corroboration": 0.2
+              }
+            }
+          }
+        ],
+        "caveats": [
+          "Evidence from segmentation is weak: Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+          "segmentation produced both favourable and adverse signals for this subject."
+        ]
+      },
+      {
+        "key": "blindspot::__CATALOGUE__",
+        "template": "cover_catalogue_blind_spot",
+        "action": "Treat the rule set as advice about the products it can see, and keep a separate process for the rest of the catalogue.",
+        "subject": {
+          "scope": "business",
+          "key": "__CATALOGUE__",
+          "label": "Product catalogue"
+        },
+        "rationale": "No rule can reach 96.0% of the catalogue (4,547 of 4,734 products), because they never meet the minimum support threshold.",
+        "priority": 0.3945,
+        "corroborated": false,
+        "sources": [
+          "association"
+        ],
+        "silent_sources": [
+          "forecast",
+          "segmentation"
+        ],
+        "evidence_weight": 0.986,
+        "revenue_at_stake": null,
+        "evidence": [
+          {
+            "source": "association",
+            "kind": "catalogue_blind_spot",
+            "subject": {
+              "scope": "business",
+              "key": "__CATALOGUE__",
+              "label": "Product catalogue"
+            },
+            "direction": -1,
+            "magnitude": 0.9604985213350232,
+            "summary": "No rule can reach 96.0% of the catalogue (4,547 of 4,734 products), because they never meet the minimum support threshold.",
+            "evidence": {
+              "available": true,
+              "catalogue_size": 4734,
+              "reachable": 187,
+              "item_coverage": 0.03950147866497676,
+              "threshold": 1,
+              "verdict": "4.0% of the catalogue can ever be recommended (187 of 4,734 products). The remaining 96.0% never clears minimum support, so no rule reaches them however a customer behaves. This is the popularity bias of Kathriarachchi et al. (2026) \u00a73.2 measured rather than asserted, and it is a property of the support threshold, not a defect in the data."
+            },
+            "reliability": {
+              "source": "association",
+              "score": 0.986,
+              "band": "strong",
+              "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+              "evidence": {
+                "survival_rate": 1.0,
+                "judged": 1100,
+                "survived": 1100,
+                "failed": 0,
+                "lift_rank_correlation": 0.9453356445405012
+              }
+            }
+          },
+          {
+            "source": "ranking",
+            "kind": "priority_components",
+            "summary": "Priority 0.395 from revenue 0.00, evidence 0.99, corroboration 0.",
+            "evidence": {
+              "components": {
+                "revenue_at_stake": 0.0,
+                "evidence_weight": 0.9863339111351253,
+                "corroboration": 0.0
+              },
+              "weights": {
+                "revenue_at_stake": 0.4,
+                "evidence_weight": 0.4,
+                "corroboration": 0.2
+              }
+            }
+          }
+        ],
+        "caveats": []
+      },
+      {
+        "key": "blindspot::__NEW_PRODUCTS__",
+        "template": "cover_new_product_blind_spot",
+        "action": "Use a non-rule method for newly listed products until they have traded long enough to appear in a mined rule.",
+        "subject": {
+          "scope": "business",
+          "key": "__NEW_PRODUCTS__",
+          "label": "Newly listed products"
+        },
+        "rationale": "0.0% of the 319 products introduced during the hold-out window can be recommended, since a rule can only name products that existed when it was mined.",
+        "priority": 0.3945,
+        "corroborated": false,
+        "sources": [
+          "association"
+        ],
+        "silent_sources": [
+          "forecast",
+          "segmentation"
+        ],
+        "evidence_weight": 0.986,
+        "revenue_at_stake": null,
+        "evidence": [
+          {
+            "source": "association",
+            "kind": "new_product_blind_spot",
+            "subject": {
+              "scope": "business",
+              "key": "__NEW_PRODUCTS__",
+              "label": "Newly listed products"
+            },
+            "direction": -1,
+            "magnitude": 1.0,
+            "summary": "0.0% of the 319 products introduced during the hold-out window can be recommended, since a rule can only name products that existed when it was mined.",
+            "evidence": {
+              "available": true,
+              "new_items": 319,
+              "covered": 0,
+              "coverage_new": 0.0,
+              "threshold": 1,
+              "verdict": "0.0% of the 319 products new to the hold-out window can be recommended by rules mined before they existed. A rule can only name products present when it was mined, so this is a structural limit of association rules rather than a result about this dataset: every new product is invisible to the method until the rules are mined again."
+            },
+            "reliability": {
+              "source": "association",
+              "score": 0.986,
+              "band": "strong",
+              "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+              "evidence": {
+                "survival_rate": 1.0,
+                "judged": 1100,
+                "survived": 1100,
+                "failed": 0,
+                "lift_rank_correlation": 0.9453356445405012
+              }
+            }
+          },
+          {
+            "source": "ranking",
+            "kind": "priority_components",
+            "summary": "Priority 0.395 from revenue 0.00, evidence 0.99, corroboration 0.",
+            "evidence": {
+              "components": {
+                "revenue_at_stake": 0.0,
+                "evidence_weight": 0.9863339111351253,
+                "corroboration": 0.0
+              },
+              "weights": {
+                "revenue_at_stake": 0.4,
+                "evidence_weight": 0.4,
+                "corroboration": 0.2
+              }
+            }
+          }
+        ],
+        "caveats": []
+      },
+      {
+        "key": "pairing::BLUE POLKADOT CUP | PINK POLKADOT CUP",
+        "template": "stock_and_display_together",
+        "action": "Keep PINK POLKADOT CUP available and adjacent wherever BLUE POLKADOT CUP is stocked or promoted.",
+        "subject": {
+          "scope": "product",
+          "key": "BLUE POLKADOT CUP -> PINK POLKADOT CUP",
+          "label": "BLUE POLKADOT CUP -> PINK POLKADOT CUP"
+        },
+        "rationale": "BLUE POLKADOT CUP is bought with PINK POLKADOT CUP in 68% of baskets containing it, across 441 baskets.",
+        "priority": 0.3945,
+        "corroborated": false,
+        "sources": [
+          "association"
+        ],
+        "silent_sources": [
+          "forecast",
+          "segmentation"
+        ],
+        "evidence_weight": 0.986,
+        "revenue_at_stake": null,
+        "evidence": [
+          {
+            "source": "association",
+            "kind": "durable_pairing",
+            "subject": {
+              "scope": "product",
+              "key": "BLUE POLKADOT CUP -> PINK POLKADOT CUP",
+              "label": "BLUE POLKADOT CUP -> PINK POLKADOT CUP"
+            },
+            "direction": 1,
+            "magnitude": 0.9055486122922876,
+            "summary": "BLUE POLKADOT CUP is bought with PINK POLKADOT CUP in 68% of baskets containing it, across 441 baskets.",
+            "evidence": {
+              "antecedent": [
+                "BLUE POLKADOT CUP"
+              ],
+              "consequent": [
+                "PINK POLKADOT CUP"
+              ],
+              "support_count": 441,
+              "confidence": 0.6816074188562596,
+              "lift": 32.229051270863685,
+              "normalised_lift": 0.9055486122922876,
+              "q_value": 0.0,
+              "held_on_holdout": true
+            },
+            "reliability": {
+              "source": "association",
+              "score": 0.986,
+              "band": "strong",
+              "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+              "evidence": {
+                "survival_rate": 1.0,
+                "judged": 1100,
+                "survived": 1100,
+                "failed": 0,
+                "lift_rank_correlation": 0.9453356445405012
+              }
+            }
+          },
+          {
+            "source": "ranking",
+            "kind": "priority_components",
+            "summary": "Priority 0.395 from revenue 0.00, evidence 0.99, corroboration 0.",
+            "evidence": {
+              "components": {
+                "revenue_at_stake": 0.0,
+                "evidence_weight": 0.9863339111351253,
+                "corroboration": 0.0
+              },
+              "weights": {
+                "revenue_at_stake": 0.4,
+                "evidence_weight": 0.4,
+                "corroboration": 0.2
+              }
+            }
+          }
+        ],
+        "caveats": []
+      },
+      {
+        "key": "pairing::BLUE POLKADOT CUP | PINK POLKADOT CUP | RED RETROSPOT CUP",
+        "template": "stock_and_display_together",
+        "action": "Keep BLUE POLKADOT CUP available and adjacent wherever RED RETROSPOT CUP + PINK POLKADOT CUP is stocked or promoted.",
+        "subject": {
+          "scope": "product",
+          "key": "RED RETROSPOT CUP + PINK POLKADOT CUP -> BLUE POLKADOT CUP",
+          "label": "RED RETROSPOT CUP + PINK POLKADOT CUP -> BLUE POLKADOT CUP"
+        },
+        "rationale": "RED RETROSPOT CUP + PINK POLKADOT CUP is bought with BLUE POLKADOT CUP in 82% of baskets containing it, across 319 baskets.",
+        "priority": 0.3945,
+        "corroborated": false,
+        "sources": [
+          "association"
+        ],
+        "silent_sources": [
+          "forecast",
+          "segmentation"
+        ],
+        "evidence_weight": 0.986,
+        "revenue_at_stake": null,
+        "evidence": [
+          {
+            "source": "association",
+            "kind": "durable_pairing",
+            "subject": {
+              "scope": "product",
+              "key": "RED RETROSPOT CUP + PINK POLKADOT CUP -> BLUE POLKADOT CUP",
+              "label": "RED RETROSPOT CUP + PINK POLKADOT CUP -> BLUE POLKADOT CUP"
+            },
+            "direction": 1,
+            "magnitude": 0.9109226044275108,
+            "summary": "RED RETROSPOT CUP + PINK POLKADOT CUP is bought with BLUE POLKADOT CUP in 82% of baskets containing it, across 319 baskets.",
+            "evidence": {
+              "antecedent": [
+                "RED RETROSPOT CUP",
+                "PINK POLKADOT CUP"
+              ],
+              "consequent": [
+                "BLUE POLKADOT CUP"
+              ],
+              "support_count": 319,
+              "confidence": 0.8242894056847545,
+              "lift": 37.77080063421317,
+              "normalised_lift": 0.9109226044275108,
+              "q_value": 0.0,
+              "held_on_holdout": true
+            },
+            "reliability": {
+              "source": "association",
+              "score": 0.986,
+              "band": "strong",
+              "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+              "evidence": {
+                "survival_rate": 1.0,
+                "judged": 1100,
+                "survived": 1100,
+                "failed": 0,
+                "lift_rank_correlation": 0.9453356445405012
+              }
+            }
+          },
+          {
+            "source": "ranking",
+            "kind": "priority_components",
+            "summary": "Priority 0.395 from revenue 0.00, evidence 0.99, corroboration 0.",
+            "evidence": {
+              "components": {
+                "revenue_at_stake": 0.0,
+                "evidence_weight": 0.9863339111351253,
+                "corroboration": 0.0
+              },
+              "weights": {
+                "revenue_at_stake": 0.4,
+                "evidence_weight": 0.4,
+                "corroboration": 0.2
+              }
+            }
+          }
+        ],
+        "caveats": []
+      },
+      {
+        "key": "pairing::GREEN REGENCY TEACUP AND SAUCER | PINK REGENCY TEACUP AND SAUCER",
+        "template": "stock_and_display_together",
+        "action": "Keep PINK REGENCY TEACUP AND SAUCER available and adjacent wherever GREEN REGENCY TEACUP AND SAUCER is stocked or promoted.",
+        "subject": {
+          "scope": "product",
+          "key": "GREEN REGENCY TEACUP AND SAUCER -> PINK REGENCY TEACUP AND SAUCER",
+          "label": "GREEN REGENCY TEACUP AND SAUCER -> PINK REGENCY TEACUP AND SAUCER"
+        },
+        "rationale": "GREEN REGENCY TEACUP AND SAUCER is bought with PINK REGENCY TEACUP AND SAUCER in 60% of baskets containing it, across 556 baskets.",
+        "priority": 0.3945,
+        "corroborated": false,
+        "sources": [
+          "association"
+        ],
+        "silent_sources": [
+          "forecast",
+          "segmentation"
+        ],
+        "evidence_weight": 0.986,
+        "revenue_at_stake": null,
+        "evidence": [
+          {
+            "source": "association",
+            "kind": "pairing",
+            "subject": {
+              "scope": "product",
+              "key": "GREEN REGENCY TEACUP AND SAUCER -> PINK REGENCY TEACUP AND SAUCER",
+              "label": "GREEN REGENCY TEACUP AND SAUCER -> PINK REGENCY TEACUP AND SAUCER"
+            },
+            "direction": 1,
+            "magnitude": 0.9371449083818755,
+            "summary": "GREEN REGENCY TEACUP AND SAUCER is bought with PINK REGENCY TEACUP AND SAUCER in 60% of baskets containing it, across 556 baskets.",
+            "evidence": {
+              "antecedent": [
+                "GREEN REGENCY TEACUP AND SAUCER"
+              ],
+              "consequent": [
+                "PINK REGENCY TEACUP AND SAUCER"
+              ],
+              "support_count": 556,
+              "confidence": 0.5978494623655914,
+              "lift": 26.895968149852337,
+              "normalised_lift": 0.9371449083818755,
+              "q_value": 0.0,
+              "held_on_holdout": false
+            },
+            "reliability": {
+              "source": "association",
+              "score": 0.986,
+              "band": "strong",
+              "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+              "evidence": {
+                "survival_rate": 1.0,
+                "judged": 1100,
+                "survived": 1100,
+                "failed": 0,
+                "lift_rank_correlation": 0.9453356445405012
+              }
+            }
+          },
+          {
+            "source": "ranking",
+            "kind": "priority_components",
+            "summary": "Priority 0.395 from revenue 0.00, evidence 0.99, corroboration 0.",
+            "evidence": {
+              "components": {
+                "revenue_at_stake": 0.0,
+                "evidence_weight": 0.9863339111351253,
+                "corroboration": 0.0
+              },
+              "weights": {
+                "revenue_at_stake": 0.4,
+                "evidence_weight": 0.4,
+                "corroboration": 0.2
+              }
+            }
+          }
+        ],
+        "caveats": [
+          "This rule was not among those confirmed on the hold-out period, so it rests on the window it was mined from."
+        ]
+      },
+      {
+        "key": "pairing::GREEN REGENCY TEACUP AND SAUCER | PINK REGENCY TEACUP AND SAUCER | REGENCY CAKESTAND 3 TIER",
+        "template": "stock_and_display_together",
+        "action": "Keep GREEN REGENCY TEACUP AND SAUCER available and adjacent wherever REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER is stocked or promoted.",
+        "subject": {
+          "scope": "product",
+          "key": "REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER",
+          "label": "REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER"
+        },
+        "rationale": "REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER is bought with GREEN REGENCY TEACUP AND SAUCER in 92% of baskets containing it, across 327 baskets.",
+        "priority": 0.3945,
+        "corroborated": false,
+        "sources": [
+          "association"
+        ],
+        "silent_sources": [
+          "forecast",
+          "segmentation"
+        ],
+        "evidence_weight": 0.986,
+        "revenue_at_stake": null,
+        "evidence": [
+          {
+            "source": "association",
+            "kind": "pairing",
+            "subject": {
+              "scope": "product",
+              "key": "REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER",
+              "label": "REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER"
+            },
+            "direction": 1,
+            "magnitude": 0.9455136893467064,
+            "summary": "REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER is bought with GREEN REGENCY TEACUP AND SAUCER in 92% of baskets containing it, across 327 baskets.",
+            "evidence": {
+              "antecedent": [
+                "REGENCY CAKESTAND 3 TIER",
+                "PINK REGENCY TEACUP AND SAUCER"
+              ],
+              "consequent": [
+                "GREEN REGENCY TEACUP AND SAUCER"
+              ],
+              "support_count": 327,
+              "confidence": 0.9159663865546218,
+              "lift": 29.199629529231043,
+              "normalised_lift": 0.9455136893467064,
+              "q_value": 0.0,
+              "held_on_holdout": false
+            },
+            "reliability": {
+              "source": "association",
+              "score": 0.986,
+              "band": "strong",
+              "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+              "evidence": {
+                "survival_rate": 1.0,
+                "judged": 1100,
+                "survived": 1100,
+                "failed": 0,
+                "lift_rank_correlation": 0.9453356445405012
+              }
+            }
+          },
+          {
+            "source": "ranking",
+            "kind": "priority_components",
+            "summary": "Priority 0.395 from revenue 0.00, evidence 0.99, corroboration 0.",
+            "evidence": {
+              "components": {
+                "revenue_at_stake": 0.0,
+                "evidence_weight": 0.9863339111351253,
+                "corroboration": 0.0
+              },
+              "weights": {
+                "revenue_at_stake": 0.4,
+                "evidence_weight": 0.4,
+                "corroboration": 0.2
+              }
+            }
+          }
+        ],
+        "caveats": [
+          "This rule was not among those confirmed on the hold-out period, so it rests on the window it was mined from."
+        ]
+      },
+      {
+        "key": "pairing::GREEN REGENCY TEACUP AND SAUCER | PINK REGENCY TEACUP AND SAUCER | ROSES REGENCY TEACUP AND SAUCER",
+        "template": "stock_and_display_together",
+        "action": "Keep ROSES REGENCY TEACUP AND SAUCER available and adjacent wherever GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER is stocked or promoted.",
+        "subject": {
+          "scope": "product",
+          "key": "GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER",
+          "label": "GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER"
+        },
+        "rationale": "GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 86% of baskets containing it, across 478 baskets.",
+        "priority": 0.3945,
+        "corroborated": false,
+        "sources": [
+          "association"
+        ],
+        "silent_sources": [
+          "forecast",
+          "segmentation"
+        ],
+        "evidence_weight": 0.986,
+        "revenue_at_stake": null,
+        "evidence": [
+          {
+            "source": "association",
+            "kind": "pairing",
+            "subject": {
+              "scope": "product",
+              "key": "GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER",
+              "label": "GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER"
+            },
+            "direction": 1,
+            "magnitude": 0.9289150722765441,
+            "summary": "GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 86% of baskets containing it, across 478 baskets.",
+            "evidence": {
+              "antecedent": [
+                "GREEN REGENCY TEACUP AND SAUCER",
+                "PINK REGENCY TEACUP AND SAUCER"
+              ],
+              "consequent": [
+                "ROSES REGENCY TEACUP AND SAUCER"
+              ],
+              "support_count": 478,
+              "confidence": 0.8597122302158273,
+              "lift": 26.30329049453935,
+              "normalised_lift": 0.9289150722765441,
+              "q_value": 0.0,
+              "held_on_holdout": false
+            },
+            "reliability": {
+              "source": "association",
+              "score": 0.986,
+              "band": "strong",
+              "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+              "evidence": {
+                "survival_rate": 1.0,
+                "judged": 1100,
+                "survived": 1100,
+                "failed": 0,
+                "lift_rank_correlation": 0.9453356445405012
+              }
+            }
+          },
+          {
+            "source": "ranking",
+            "kind": "priority_components",
+            "summary": "Priority 0.395 from revenue 0.00, evidence 0.99, corroboration 0.",
+            "evidence": {
+              "components": {
+                "revenue_at_stake": 0.0,
+                "evidence_weight": 0.9863339111351253,
+                "corroboration": 0.0
+              },
+              "weights": {
+                "revenue_at_stake": 0.4,
+                "evidence_weight": 0.4,
+                "corroboration": 0.2
+              }
+            }
+          }
+        ],
+        "caveats": [
+          "This rule was not among those confirmed on the hold-out period, so it rests on the window it was mined from."
+        ]
+      },
+      {
+        "key": "pairing::GREEN REGENCY TEACUP AND SAUCER | ROSES REGENCY TEACUP AND SAUCER",
+        "template": "stock_and_display_together",
+        "action": "Keep ROSES REGENCY TEACUP AND SAUCER available and adjacent wherever GREEN REGENCY TEACUP AND SAUCER is stocked or promoted.",
+        "subject": {
+          "scope": "product",
+          "key": "GREEN REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER",
+          "label": "GREEN REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER"
+        },
+        "rationale": "GREEN REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 77% of baskets containing it, across 714 baskets.",
+        "priority": 0.3945,
+        "corroborated": false,
+        "sources": [
+          "association"
+        ],
+        "silent_sources": [
+          "forecast",
+          "segmentation"
+        ],
+        "evidence_weight": 0.986,
+        "revenue_at_stake": null,
+        "evidence": [
+          {
+            "source": "association",
+            "kind": "pairing",
+            "subject": {
+              "scope": "product",
+              "key": "GREEN REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER",
+              "label": "GREEN REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER"
+            },
+            "direction": 1,
+            "magnitude": 0.9388794567062818,
+            "summary": "GREEN REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 77% of baskets containing it, across 714 baskets.",
+            "evidence": {
+              "antecedent": [
+                "GREEN REGENCY TEACUP AND SAUCER"
+              ],
+              "consequent": [
+                "ROSES REGENCY TEACUP AND SAUCER"
+              ],
+              "support_count": 714,
+              "confidence": 0.7677419354838709,
+              "lift": 23.48941709111488,
+              "normalised_lift": 0.9388794567062818,
+              "q_value": 0.0,
+              "held_on_holdout": false
+            },
+            "reliability": {
+              "source": "association",
+              "score": 0.986,
+              "band": "strong",
+              "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+              "evidence": {
+                "survival_rate": 1.0,
+                "judged": 1100,
+                "survived": 1100,
+                "failed": 0,
+                "lift_rank_correlation": 0.9453356445405012
+              }
+            }
+          },
+          {
+            "source": "ranking",
+            "kind": "priority_components",
+            "summary": "Priority 0.395 from revenue 0.00, evidence 0.99, corroboration 0.",
+            "evidence": {
+              "components": {
+                "revenue_at_stake": 0.0,
+                "evidence_weight": 0.9863339111351253,
+                "corroboration": 0.0
+              },
+              "weights": {
+                "revenue_at_stake": 0.4,
+                "evidence_weight": 0.4,
+                "corroboration": 0.2
+              }
+            }
+          }
+        ],
+        "caveats": [
+          "This rule was not among those confirmed on the hold-out period, so it rests on the window it was mined from."
+        ]
+      },
+      {
+        "key": "pairing::PINK REGENCY TEACUP AND SAUCER | ROSES REGENCY TEACUP AND SAUCER",
+        "template": "stock_and_display_together",
+        "action": "Keep ROSES REGENCY TEACUP AND SAUCER available and adjacent wherever PINK REGENCY TEACUP AND SAUCER is stocked or promoted.",
+        "subject": {
+          "scope": "product",
+          "key": "PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER",
+          "label": "PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER"
+        },
+        "rationale": "PINK REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 79% of baskets containing it, across 522 baskets.",
+        "priority": 0.3945,
+        "corroborated": false,
+        "sources": [
+          "association"
+        ],
+        "silent_sources": [
+          "forecast",
+          "segmentation"
+        ],
+        "evidence_weight": 0.986,
+        "revenue_at_stake": null,
+        "evidence": [
+          {
+            "source": "association",
+            "kind": "pairing",
+            "subject": {
+              "scope": "product",
+              "key": "PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER",
+              "label": "PINK REGENCY TEACUP AND SAUCER -> ROSES REGENCY TEACUP AND SAUCER"
+            },
+            "direction": 1,
+            "magnitude": 0.9040999356375407,
+            "summary": "PINK REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 79% of baskets containing it, across 522 baskets.",
+            "evidence": {
+              "antecedent": [
+                "PINK REGENCY TEACUP AND SAUCER"
+              ],
+              "consequent": [
+                "ROSES REGENCY TEACUP AND SAUCER"
+              ],
+              "support_count": 522,
+              "confidence": 0.7921092564491654,
+              "lift": 24.234946466407024,
+              "normalised_lift": 0.9040999356375407,
+              "q_value": 0.0,
+              "held_on_holdout": false
+            },
+            "reliability": {
+              "source": "association",
+              "score": 0.986,
+              "band": "strong",
+              "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+              "evidence": {
+                "survival_rate": 1.0,
+                "judged": 1100,
+                "survived": 1100,
+                "failed": 0,
+                "lift_rank_correlation": 0.9453356445405012
+              }
+            }
+          },
+          {
+            "source": "ranking",
+            "kind": "priority_components",
+            "summary": "Priority 0.395 from revenue 0.00, evidence 0.99, corroboration 0.",
+            "evidence": {
+              "components": {
+                "revenue_at_stake": 0.0,
+                "evidence_weight": 0.9863339111351253,
+                "corroboration": 0.0
+              },
+              "weights": {
+                "revenue_at_stake": 0.4,
+                "evidence_weight": 0.4,
+                "corroboration": 0.2
+              }
+            }
+          }
+        ],
+        "caveats": [
+          "This rule was not among those confirmed on the hold-out period, so it rests on the window it was mined from."
+        ]
+      }
+    ],
+    "generated": 21,
+    "shown": 10,
+    "transparency": {
+      "available": true,
+      "recommendations": 10,
+      "with_evidence": 10,
+      "with_driving_features": 10,
+      "with_named_sources": 10,
+      "transparency_index": 1.0,
+      "templates_without_drivers": [],
+      "verdict": "Every recommendation carries evidence, a named source and at least one driving figure, so the transparency index is 100%."
+    },
+    "procedural_fairness": {
+      "available": true,
+      "source": "Wang, Huang, Tang & Yao (2026), Journal of Artificial Intelligence Research 85, Article 20, Definitions 1-3 and Equation 9.",
+      "threshold": 0.34,
+      "templates_assessed": 1,
+      "templates_inconsistent": 0,
+      "rows": [
+        {
+          "template": "stock_and_display_together",
+          "instances": 7,
+          "mean_driver_distance": 0.0,
+          "consistent": true,
+          "shared_features": [
+            "association.confidence",
+            "association.lift",
+            "association.normalised_lift",
+            "association.q_value",
+            "association.support_count"
+          ],
+          "divergent_features": []
+        }
+      ],
+      "worst_template": "stock_and_display_together",
+      "verdict": "Decisions of the same kind are driven by consistent evidence across all 1 templates assessed; the widest divergence is 0.00 on stock_and_display_together, within the declared threshold of 0.34.",
+      "method_note": "An instantiation of their Definition 3 at the level of decision kinds, using the distance between driving-feature sets in place of maximum mean discrepancy over attribution values with a permutation test. Their measurement compares hundreds of matched individuals; this layer emits on the order of ten decisions, where a permutation test would return a p-value with nothing behind it. The substitution is a weakening and should be reported as one.",
+      "scope_note": "Procedural fairness concerns the decision process. The distributive question, whether some customers receive materially better offers than others, is answered by the segment profiles and by the recommender hazard metrics, not here."
+    }
+  },
+  "condition_b_isolated": {
+    "lists": {
+      "forecast": [
+        {
+          "subject": "Total weekly revenue",
+          "scope": "business",
+          "statement": "Prediction intervals covered 25% of hold-out observations against a nominal 80%, so the stated range understates how wrong the forecast can be.",
+          "kind": "interval_understates_risk",
+          "magnitude": 0.55,
+          "evidence": {
+            "available": true,
+            "nominal": 0.8,
+            "observed": 0.25,
+            "points": 12,
+            "mean_width": 84039.21426878292,
+            "verdict": "too narrow - the interval understates the uncertainty",
+            "caveat": "Observed coverage is itself estimated from 12 points, so it carries its own uncertainty; do not read a gap of a few percentage points as a finding."
+          }
+        },
+        {
+          "subject": "Total weekly revenue",
+          "scope": "business",
+          "statement": "Forecast revenue over the next 12 periods averages -35.6% against the most recent observed period. The interval spans -47.9% to -17.8%.",
+          "kind": "demand_direction",
+          "magnitude": -0.35598183532849453,
+          "evidence": {
+            "horizon": 12,
+            "mean_forecast": 179850.2606387999,
+            "baseline": 279262.7141666667,
+            "model": "combination_median",
+            "interval_level": 0.8,
+            "scenarios": {
+              "pessimistic": -0.47886159740987283,
+              "central": -0.35598183532849453,
+              "optimistic": -0.17792914203515536
+            }
+          }
+        }
+      ],
+      "segmentation": [
+        {
+          "subject": "recent, frequent, high value",
+          "scope": "segment",
+          "statement": "recent, frequent, high value holds 81.7% of revenue from 28.1% of customers.",
+          "kind": "revenue_concentration",
+          "magnitude": 2.9098870059718878,
+          "evidence": {
+            "customers": 1650,
+            "customer_share": 0.2808988764044944,
+            "revenue_share": 0.8173839904415415,
+            "median_recency_days": 22.0,
+            "median_frequency": 11.0,
+            "median_monetary": 3808.855,
+            "concentration_ratio": 2.9098870059718878
+          }
+        },
+        {
+          "subject": "recent, frequent, high value",
+          "scope": "segment",
+          "statement": "32% of recent, frequent, high value moved to lapsed occasional between 2011-04-04 -> 2011-08-06.",
+          "kind": "segment_outflow",
+          "magnitude": 0.31894691411307724,
+          "evidence": {
+            "window": "2011-04-04 -> 2011-08-06",
+            "from": 1,
+            "to": 2,
+            "customers": 739,
+            "share_of_source": 0.31894691411307724
+          }
+        },
+        {
+          "subject": "mid recency, mid frequency, mid value",
+          "scope": "segment",
+          "statement": "mid recency, mid frequency, mid value holds 12.5% of revenue from 40.7% of customers.",
+          "kind": "revenue_concentration",
+          "magnitude": 0.30638899383008616,
+          "evidence": {
+            "customers": 2393,
+            "customer_share": 0.4073884916581546,
+            "revenue_share": 0.12481935005709843,
+            "median_recency_days": 59.0,
+            "median_frequency": 3.0,
+            "median_monetary": 705.79,
+            "concentration_ratio": 0.30638899383008616
+          }
+        },
+        {
+          "subject": "recent, frequent, high value",
+          "scope": "segment",
+          "statement": "25% of recent, frequent, high value moved to lapsed occasional between 2011-08-06 -> 2011-12-09.",
+          "kind": "segment_outflow",
+          "magnitude": 0.24742729306487696,
+          "evidence": {
+            "window": "2011-08-06 -> 2011-12-09",
+            "from": 1,
+            "to": 2,
+            "customers": 553,
+            "share_of_source": 0.24742729306487696
+          }
+        },
+        {
+          "subject": "lapsed occasional",
+          "scope": "segment",
+          "statement": "lapsed occasional holds 5.8% of revenue from 31.2% of customers.",
+          "kind": "revenue_concentration",
+          "magnitude": 0.18541648165537364,
+          "evidence": {
+            "customers": 1831,
+            "customer_share": 0.31171263193735105,
+            "revenue_share": 0.057796659501360086,
+            "median_recency_days": 436.0,
+            "median_frequency": 1.0,
+            "median_monetary": 312.38,
+            "concentration_ratio": 0.18541648165537364
+          }
+        },
+        {
+          "subject": "lapsed occasional",
+          "scope": "segment",
+          "statement": "17% of lapsed occasional moved to recent, frequent, high value between 2011-08-06 -> 2011-12-09.",
+          "kind": "segment_outflow",
+          "magnitude": 0.17261518494484102,
+          "evidence": {
+            "window": "2011-08-06 -> 2011-12-09",
+            "from": 2,
+            "to": 1,
+            "customers": 266,
+            "share_of_source": 0.17261518494484102
+          }
+        },
+        {
+          "subject": "mid recency, mid frequency, mid value",
+          "scope": "segment",
+          "statement": "16% of mid recency, mid frequency, mid value moved to recent, frequent, high value between 2011-04-04 -> 2011-08-06.",
+          "kind": "segment_outflow",
+          "magnitude": 0.15771812080536912,
+          "evidence": {
+            "window": "2011-04-04 -> 2011-08-06",
+            "from": 0,
+            "to": 1,
+            "customers": 235,
+            "share_of_source": 0.15771812080536912
+          }
+        }
+      ],
+      "association": [
+        {
+          "subject": "Newly listed products",
+          "scope": "business",
+          "statement": "0.0% of the 319 products introduced during the hold-out window can be recommended, since a rule can only name products that existed when it was mined.",
+          "kind": "new_product_blind_spot",
+          "magnitude": 1.0,
+          "evidence": {
+            "available": true,
+            "new_items": 319,
+            "covered": 0,
+            "coverage_new": 0.0,
+            "threshold": 1,
+            "verdict": "0.0% of the 319 products new to the hold-out window can be recommended by rules mined before they existed. A rule can only name products present when it was mined, so this is a structural limit of association rules rather than a result about this dataset: every new product is invisible to the method until the rules are mined again."
+          }
+        },
+        {
+          "subject": "Product catalogue",
+          "scope": "business",
+          "statement": "No rule can reach 96.0% of the catalogue (4,547 of 4,734 products), because they never meet the minimum support threshold.",
+          "kind": "catalogue_blind_spot",
+          "magnitude": 0.9604985213350232,
+          "evidence": {
+            "available": true,
+            "catalogue_size": 4734,
+            "reachable": 187,
+            "item_coverage": 0.03950147866497676,
+            "threshold": 1,
+            "verdict": "4.0% of the catalogue can ever be recommended (187 of 4,734 products). The remaining 96.0% never clears minimum support, so no rule reaches them however a customer behaves. This is the popularity bias of Kathriarachchi et al. (2026) \u00a73.2 measured rather than asserted, and it is a property of the support threshold, not a defect in the data."
+          }
+        },
+        {
+          "subject": "POPPY'S PLAYHOUSE KITCHEN -> POPPY'S PLAYHOUSE BEDROOM",
+          "scope": "product",
+          "statement": "POPPY'S PLAYHOUSE KITCHEN is bought with POPPY'S PLAYHOUSE BEDROOM in 78% of baskets containing it, across 414 baskets.",
+          "kind": "pairing",
+          "magnitude": 0.9597681719391451,
+          "evidence": {
+            "antecedent": [
+              "POPPY'S PLAYHOUSE KITCHEN"
+            ],
+            "consequent": [
+              "POPPY'S PLAYHOUSE BEDROOM"
+            ],
+            "support_count": 414,
+            "confidence": 0.776735459662289,
+            "lift": 45.59975479724333,
+            "normalised_lift": 0.9597681719391451,
+            "q_value": 0.0,
+            "held_on_holdout": false
+          }
+        },
+        {
+          "subject": "POPPY'S PLAYHOUSE BEDROOM -> POPPY'S PLAYHOUSE KITCHEN",
+          "scope": "product",
+          "statement": "POPPY'S PLAYHOUSE BEDROOM is bought with POPPY'S PLAYHOUSE KITCHEN in 82% of baskets containing it, across 414 baskets.",
+          "kind": "pairing",
+          "magnitude": 0.9597681719391451,
+          "evidence": {
+            "antecedent": [
+              "POPPY'S PLAYHOUSE BEDROOM"
+            ],
+            "consequent": [
+              "POPPY'S PLAYHOUSE KITCHEN"
+            ],
+            "support_count": 414,
+            "confidence": 0.8198019801980198,
+            "lift": 45.59975479724333,
+            "normalised_lift": 0.9597681719391451,
+            "q_value": 0.0,
+            "held_on_holdout": false
+          }
+        },
+        {
+          "subject": "PINK REGENCY TEACUP AND SAUCER + ROSES REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER",
+          "scope": "product",
+          "statement": "PINK REGENCY TEACUP AND SAUCER + ROSES REGENCY TEACUP AND SAUCER is bought with GREEN REGENCY TEACUP AND SAUCER in 92% of baskets containing it, across 478 baskets.",
+          "kind": "pairing",
+          "magnitude": 0.9590326700449059,
+          "evidence": {
+            "antecedent": [
+              "PINK REGENCY TEACUP AND SAUCER",
+              "ROSES REGENCY TEACUP AND SAUCER"
+            ],
+            "consequent": [
+              "GREEN REGENCY TEACUP AND SAUCER"
+            ],
+            "support_count": 478,
+            "confidence": 0.9157088122605364,
+            "lift": 29.191418448481848,
+            "normalised_lift": 0.9590326700449059,
+            "q_value": 0.0,
+            "held_on_holdout": false
+          }
+        },
+        {
+          "subject": "POPPY'S PLAYHOUSE BEDROOM -> POPPY'S PLAYHOUSE LIVINGROOM",
+          "scope": "product",
+          "statement": "POPPY'S PLAYHOUSE BEDROOM is bought with POPPY'S PLAYHOUSE LIVINGROOM in 69% of baskets containing it, across 347 baskets.",
+          "kind": "pairing",
+          "magnitude": 0.9481054836252856,
+          "evidence": {
+            "antecedent": [
+              "POPPY'S PLAYHOUSE BEDROOM"
+            ],
+            "consequent": [
+              "POPPY'S PLAYHOUSE LIVINGROOM"
+            ],
+            "support_count": 347,
+            "confidence": 0.6871287128712872,
+            "lift": 48.969483054074644,
+            "normalised_lift": 0.9481054836252856,
+            "q_value": 0.0,
+            "held_on_holdout": false
+          }
+        },
+        {
+          "subject": "POPPY'S PLAYHOUSE LIVINGROOM -> POPPY'S PLAYHOUSE BEDROOM",
+          "scope": "product",
+          "statement": "POPPY'S PLAYHOUSE LIVINGROOM is bought with POPPY'S PLAYHOUSE BEDROOM in 83% of baskets containing it, across 347 baskets.",
+          "kind": "pairing",
+          "magnitude": 0.9481054836252856,
+          "evidence": {
+            "antecedent": [
+              "POPPY'S PLAYHOUSE LIVINGROOM"
+            ],
+            "consequent": [
+              "POPPY'S PLAYHOUSE BEDROOM"
+            ],
+            "support_count": 347,
+            "confidence": 0.8341346153846154,
+            "lift": 48.969483054074644,
+            "normalised_lift": 0.9481054836252856,
+            "q_value": 0.0,
+            "held_on_holdout": false
+          }
+        },
+        {
+          "subject": "POPPY'S PLAYHOUSE KITCHEN -> POPPY'S PLAYHOUSE LIVINGROOM",
+          "scope": "product",
+          "statement": "POPPY'S PLAYHOUSE KITCHEN is bought with POPPY'S PLAYHOUSE LIVINGROOM in 66% of baskets containing it, across 350 baskets.",
+          "kind": "pairing",
+          "magnitude": 0.9455278539471785,
+          "evidence": {
+            "antecedent": [
+              "POPPY'S PLAYHOUSE KITCHEN"
+            ],
+            "consequent": [
+              "POPPY'S PLAYHOUSE LIVINGROOM"
+            ],
+            "support_count": 350,
+            "confidence": 0.6566604127579737,
+            "lift": 46.79810398325877,
+            "normalised_lift": 0.9455278539471785,
+            "q_value": 0.0,
+            "held_on_holdout": false
+          }
+        },
+        {
+          "subject": "POPPY'S PLAYHOUSE LIVINGROOM -> POPPY'S PLAYHOUSE KITCHEN",
+          "scope": "product",
+          "statement": "POPPY'S PLAYHOUSE LIVINGROOM is bought with POPPY'S PLAYHOUSE KITCHEN in 84% of baskets containing it, across 350 baskets.",
+          "kind": "pairing",
+          "magnitude": 0.9455278539471785,
+          "evidence": {
+            "antecedent": [
+              "POPPY'S PLAYHOUSE LIVINGROOM"
+            ],
+            "consequent": [
+              "POPPY'S PLAYHOUSE KITCHEN"
+            ],
+            "support_count": 350,
+            "confidence": 0.8413461538461539,
+            "lift": 46.79810398325877,
+            "normalised_lift": 0.9455278539471785,
+            "q_value": 0.0,
+            "held_on_holdout": false
+          }
+        },
+        {
+          "subject": "REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER -> GREEN REGENCY TEACUP AND SAUCER",
+          "scope": "product",
+          "statement": "REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER is bought with GREEN REGENCY TEACUP AND SAUCER in 92% of baskets containing it, across 327 baskets.",
+          "kind": "pairing",
+          "magnitude": 0.9455136893467064,
+          "evidence": {
+            "antecedent": [
+              "REGENCY CAKESTAND 3 TIER",
+              "PINK REGENCY TEACUP AND SAUCER"
+            ],
+            "consequent": [
+              "GREEN REGENCY TEACUP AND SAUCER"
+            ],
+            "support_count": 327,
+            "confidence": 0.9159663865546218,
+            "lift": 29.199629529231043,
+            "normalised_lift": 0.9455136893467064,
+            "q_value": 0.0,
+            "held_on_holdout": false
+          }
+        }
+      ]
+    },
+    "reliability": {
+      "forecast": {
+        "source": "forecast",
+        "score": 0.0,
+        "band": "weak",
+        "basis": "Hold-out WAPE 35.60 for combination_median; prediction intervals 25% observed against 80% nominal.",
+        "evidence": {
+          "model": "combination_median",
+          "holdout_wape": 35.5981835328,
+          "accuracy_component": 0.0,
+          "interval_component": 0.0,
+          "interval_coverage": {
+            "available": true,
+            "nominal": 0.8,
+            "observed": 0.25,
+            "points": 12,
+            "mean_width": 84039.21426878292,
+            "verdict": "too narrow - the interval understates the uncertainty",
+            "caveat": "Observed coverage is itself estimated from 12 points, so it carries its own uncertainty; do not read a gap of a few percentage points as a finding."
+          },
+          "selected_model_scored": true
+        }
+      },
+      "segmentation": {
+        "source": "segmentation",
+        "score": 0.221,
+        "band": "weak",
+        "basis": "Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.",
+        "evidence": {
+          "weakest_algorithm": "gaussian",
+          "mean_adjusted_rand": 0.2214560691760652,
+          "mean_retention_share": 0.6077116855385297,
+          "families_compared": [
+            "gaussian",
+            "hierarchical",
+            "kmeans"
+          ],
+          "all_scores": {
+            "kmeans": 0.3922773108690368,
+            "hierarchical": 0.26313785593462075,
+            "gaussian": 0.2214560691760652
+          }
+        }
+      },
+      "association": {
+        "source": "association",
+        "score": 0.986,
+        "band": "strong",
+        "basis": "100.0% of 1,100 judged rules held on baskets they were not mined from. Lift ranking correlates at 0.95 across periods.",
+        "evidence": {
+          "survival_rate": 1.0,
+          "judged": 1100,
+          "survived": 1100,
+          "failed": 0,
+          "lift_rank_correlation": 0.9453356445405012
+        }
+      }
+    },
+    "items": 19,
+    "structural_limits": [
+      "The three lists cannot be ordered against one another, because the engines share no common scale.",
+      "No item can be marked as corroborated, since corroboration is a property of the join between lists.",
+      "Reliability is reported per engine and cannot be attached to an individual item from another engine.",
+      "No list can report which other engine was silent about a subject."
+    ],
+    "note": "Built from the same signals, the same thresholds and the same underlying runs as the integrated condition. Nothing is withheld; only the join is absent."
+  },
+  "reconciliation_burden": {
+    "integrated_items": 10,
+    "baseline_items": 19,
+    "baseline_lists": 3,
+    "cross_list_comparisons_required": 38,
+    "corroborated_items_available_only_when_integrated": 0,
+    "items_carrying_an_explicit_caveat": 6,
+    "note": "The isolated condition presents 19 items across 3 lists with no ordering between them, so a reader comparing each item against the other lists performs 38 comparisons to reach the position the integrated condition starts from. Whether that cost matters is what the RQ4 sessions measure."
+  },
+  "session_protocol": {
+    "design": "Within-participant. Each participant sees both conditions, with the order counterbalanced across participants so practice effects do not accumulate on one condition.",
+    "measures": [
+      "Time to reach a stated stock or promotion decision",
+      "Recommendations accepted that the evidence does not support",
+      "Recommendations rejected that the evidence does support",
+      "Self-rated explanation sufficiency on a five-point scale",
+      "Self-rated trust in the presented analysis"
+    ],
+    "measure_note": "Acceptance is recorded as two separate counts rather than one rate. Jordan and Mitchell (2015) observe that a performance measure is a choice and may penalise one error direction more than the other; in retail, acting on a poor recommendation and ignoring a sound one carry different costs, and a single acceptance rate would average them away.",
+    "caveat": "Both packs are text. Any difference observed is a difference of structure and content, not of visual design, which the dissertation should state when reporting the result."
+  }
+}

@@ -1,0 +1,190 @@
+Condition A - integrated decision support
+=========================================
+
+Each item below states the action, the reasons to be careful with it, the evidence behind it, and which analyses contributed. Items are ordered by priority.
+
+1. Handle recent, frequent, high value separately from the general customer base for service levels, stock allocation and contact frequency.
+
+Before acting:
+  - Evidence from segmentation is weak: Weakest of 3 clustering families is gaussian at mean Adjusted Rand Index 0.221 with 61% of customers retained.
+  - segmentation produced both favourable and adverse signals for this subject.
+
+Why: recent, frequent, high value holds 81.7% of revenue from 28.1% of customers. That is 2.9 times the revenue its size would imply, so a change in this group moves the business total more than its customer count suggests.
+
+Driving figures:
+  - share of customers: 0.281 (from segmentation)
+  - share of revenue: 0.817 (from segmentation)
+  - median days since last purchase: 22 (from segmentation)
+  - median orders per customer: 11 (from segmentation)
+  - median net spend per customer: 3,808.86 (from segmentation)
+  - revenue per unit of customer share: 2.91 (from segmentation)
+  - share of the segment that moved: 0.319 (from segmentation)
+
+Evidence from: segmentation; silent: association, forecast
+Corroborated by more than one engine: no
+Priority: 0.489
+
+----------------------------------------------------------------------
+
+2. Treat the rule set as advice about the products it can see, and keep a separate process for the rest of the catalogue.
+
+Why: No rule can reach 96.0% of the catalogue (4,547 of 4,734 products), because they never meet the minimum support threshold.
+
+Driving figures:
+  - products in the catalogue: 4,734 (from association)
+  - products a rule can name: 187 (from association)
+  - share of the catalogue any rule can reach: 0.04 (from association)
+
+Evidence from: association; silent: forecast, segmentation
+Corroborated by more than one engine: no
+Priority: 0.395
+
+----------------------------------------------------------------------
+
+3. Use a non-rule method for newly listed products until they have traded long enough to appear in a mined rule.
+
+Why: 0.0% of the 319 products introduced during the hold-out window can be recommended, since a rule can only name products that existed when it was mined.
+
+Driving figures:
+  - products introduced during the hold-out window: 319 (from association)
+  - share of newly listed products a rule can reach: 0 (from association)
+
+Evidence from: association; silent: forecast, segmentation
+Corroborated by more than one engine: no
+Priority: 0.395
+
+----------------------------------------------------------------------
+
+4. Keep PINK POLKADOT CUP available and adjacent wherever BLUE POLKADOT CUP is stocked or promoted.
+
+Why: BLUE POLKADOT CUP is bought with PINK POLKADOT CUP in 68% of baskets containing it, across 441 baskets.
+
+Driving figures:
+  - baskets containing the pairing: 441 (from association)
+  - basket confidence: 0.682 (from association)
+  - lift: 32.23 (from association)
+  - normalised lift: 0.906 (from association)
+  - false-discovery-adjusted p-value: 0 (from association)
+
+Evidence from: association; silent: forecast, segmentation
+Corroborated by more than one engine: no
+Priority: 0.395
+
+----------------------------------------------------------------------
+
+5. Keep BLUE POLKADOT CUP available and adjacent wherever RED RETROSPOT CUP + PINK POLKADOT CUP is stocked or promoted.
+
+Why: RED RETROSPOT CUP + PINK POLKADOT CUP is bought with BLUE POLKADOT CUP in 82% of baskets containing it, across 319 baskets.
+
+Driving figures:
+  - baskets containing the pairing: 319 (from association)
+  - basket confidence: 0.824 (from association)
+  - lift: 37.77 (from association)
+  - normalised lift: 0.911 (from association)
+  - false-discovery-adjusted p-value: 0 (from association)
+
+Evidence from: association; silent: forecast, segmentation
+Corroborated by more than one engine: no
+Priority: 0.395
+
+----------------------------------------------------------------------
+
+6. Keep PINK REGENCY TEACUP AND SAUCER available and adjacent wherever GREEN REGENCY TEACUP AND SAUCER is stocked or promoted.
+
+Before acting:
+  - This rule was not among those confirmed on the hold-out period, so it rests on the window it was mined from.
+
+Why: GREEN REGENCY TEACUP AND SAUCER is bought with PINK REGENCY TEACUP AND SAUCER in 60% of baskets containing it, across 556 baskets.
+
+Driving figures:
+  - baskets containing the pairing: 556 (from association)
+  - basket confidence: 0.598 (from association)
+  - lift: 26.9 (from association)
+  - normalised lift: 0.937 (from association)
+  - false-discovery-adjusted p-value: 0 (from association)
+
+Evidence from: association; silent: forecast, segmentation
+Corroborated by more than one engine: no
+Priority: 0.395
+
+----------------------------------------------------------------------
+
+7. Keep GREEN REGENCY TEACUP AND SAUCER available and adjacent wherever REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER is stocked or promoted.
+
+Before acting:
+  - This rule was not among those confirmed on the hold-out period, so it rests on the window it was mined from.
+
+Why: REGENCY CAKESTAND 3 TIER + PINK REGENCY TEACUP AND SAUCER is bought with GREEN REGENCY TEACUP AND SAUCER in 92% of baskets containing it, across 327 baskets.
+
+Driving figures:
+  - baskets containing the pairing: 327 (from association)
+  - basket confidence: 0.916 (from association)
+  - lift: 29.2 (from association)
+  - normalised lift: 0.946 (from association)
+  - false-discovery-adjusted p-value: 0 (from association)
+
+Evidence from: association; silent: forecast, segmentation
+Corroborated by more than one engine: no
+Priority: 0.395
+
+----------------------------------------------------------------------
+
+8. Keep ROSES REGENCY TEACUP AND SAUCER available and adjacent wherever GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER is stocked or promoted.
+
+Before acting:
+  - This rule was not among those confirmed on the hold-out period, so it rests on the window it was mined from.
+
+Why: GREEN REGENCY TEACUP AND SAUCER + PINK REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 86% of baskets containing it, across 478 baskets.
+
+Driving figures:
+  - baskets containing the pairing: 478 (from association)
+  - basket confidence: 0.86 (from association)
+  - lift: 26.3 (from association)
+  - normalised lift: 0.929 (from association)
+  - false-discovery-adjusted p-value: 0 (from association)
+
+Evidence from: association; silent: forecast, segmentation
+Corroborated by more than one engine: no
+Priority: 0.395
+
+----------------------------------------------------------------------
+
+9. Keep ROSES REGENCY TEACUP AND SAUCER available and adjacent wherever GREEN REGENCY TEACUP AND SAUCER is stocked or promoted.
+
+Before acting:
+  - This rule was not among those confirmed on the hold-out period, so it rests on the window it was mined from.
+
+Why: GREEN REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 77% of baskets containing it, across 714 baskets.
+
+Driving figures:
+  - baskets containing the pairing: 714 (from association)
+  - basket confidence: 0.768 (from association)
+  - lift: 23.49 (from association)
+  - normalised lift: 0.939 (from association)
+  - false-discovery-adjusted p-value: 0 (from association)
+
+Evidence from: association; silent: forecast, segmentation
+Corroborated by more than one engine: no
+Priority: 0.395
+
+----------------------------------------------------------------------
+
+10. Keep ROSES REGENCY TEACUP AND SAUCER available and adjacent wherever PINK REGENCY TEACUP AND SAUCER is stocked or promoted.
+
+Before acting:
+  - This rule was not among those confirmed on the hold-out period, so it rests on the window it was mined from.
+
+Why: PINK REGENCY TEACUP AND SAUCER is bought with ROSES REGENCY TEACUP AND SAUCER in 79% of baskets containing it, across 522 baskets.
+
+Driving figures:
+  - baskets containing the pairing: 522 (from association)
+  - basket confidence: 0.792 (from association)
+  - lift: 24.23 (from association)
+  - normalised lift: 0.904 (from association)
+  - false-discovery-adjusted p-value: 0 (from association)
+
+Evidence from: association; silent: forecast, segmentation
+Corroborated by more than one engine: no
+Priority: 0.395
+
+----------------------------------------------------------------------

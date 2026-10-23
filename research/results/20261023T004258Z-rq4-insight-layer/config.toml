@@ -1,0 +1,118 @@
+# RQ4: does integrating the three analyses produce decision support that is
+# measurably more actionable and more trustworthy than the same components used
+# in isolation?
+#
+# Same discipline as the other three configurations. This file IS the
+# experiment: declared before the run, committed, and its SHA-256 stored with
+# the results.
+#
+#   python research/run_insights.py research/configs/rq4_insights.toml
+
+[meta]
+name = "rq4-insight-layer"
+research_question = "RQ4"
+description = """
+Reconcile the executed RQ1, RQ2 and RQ3 runs into ranked recommendations with
+evidence attached, and produce the isolated-component control condition from
+the same signals."""
+author = "Saurabh Singh"
+
+[inputs]
+# This runner reads the result files the earlier experiments wrote, so it needs
+# no database and cannot drift from the figures reported for RQ1 to RQ3.
+results_directory = "research/results"
+
+# Name a directory explicitly for the run whose numbers you cite. The
+# "latest:" form picks the most recent directory with that suffix, which is
+# convenient while iterating; either way the resolved path and the input run's
+# own config hash are recorded in the output.
+#
+# Set these to the directories cited in your results chapter:
+forecast = "20261016T021001Z-rq1-forecasting-weekly-total"
+segmentation = "20261017T004117Z-rq2-segmentation-stability"
+association = "20261020T232331Z-rq3-association-rules"
+
+[ranking]
+# Weights for the three priority components. They are normalised, so they need
+# not sum to one, and every component must be named even to give it zero -
+# omitting one should be a visible decision rather than a silent default.
+#
+# Declared here before the first ranked list was read. Adjusting them after
+# seeing which recommendations reached the top would be choosing the answer.
+#
+#   revenue_at_stake  share of the largest monetary quantity in the set
+#   evidence_weight   reliability of the engine behind the signal, computed
+#                     from its out-of-sample performance
+#   corroboration     one where more than one engine spoke about the subject
+#
+# Note what is absent. Assessment One proposed ranking by margin contribution
+# and inventory feasibility; Online Retail II records neither product cost nor
+# stock level, so a proxy would have made the score look more complete without
+# making it more informative.
+[ranking.weights]
+revenue_at_stake = 0.40
+evidence_weight = 0.40
+corroboration = 0.20
+
+[presentation]
+# How many recommendations Condition A presents. Ten is a planning cycle's
+# worth of attention; a longer list measures reading stamina rather than
+# decision support.
+top_n = 10
+
+# How many items each of Condition B's three reports presents. Capped at the
+# same depth so neither condition wins on volume alone.
+per_list = 10
+
+# How many association rules are converted into signals before ranking. The
+# rule set runs to four figures and the strongest few hundred are all
+# within-product-family pairings, so a deeper read adds length without adding
+# distinct advice.
+rule_limit = 25
+
+[session]
+# Recorded here so the protocol is fixed before any participant is seen.
+design = "within-participant, order counterbalanced across participants"
+
+# Acceptance is two counts rather than one rate. Jordan and Mitchell (2015)
+# note that a performance measure is a choice, and may deliberately penalise
+# one error direction more than the other - their example is a fraud classifier
+# punished more for a miss than for a false alarm. In retail the equivalent
+# asymmetry is a stockout against overstock, so accepting a poor recommendation
+# and rejecting a sound one are recorded separately. A single acceptance rate
+# would average the two away.
+measures = [
+    "time to reach a stated stock or promotion decision",
+    "recommendations accepted that the evidence does not support",
+    "recommendations rejected that the evidence does support",
+    "explanation sufficiency, five-point scale",
+    "trust in the presented analysis, five-point scale",
+]
+# Both conditions are plain text, so any difference observed is one of
+# structure and content rather than of visual design. State this when the
+# result is reported.
+medium = "text session packs, identical typography"
+
+[fairness]
+# Wang et al. (2026) define procedural fairness over the consistency of the
+# decision process between similar cases, and reject the weaker position - which
+# this project previously held - that exposing the features behind a decision is
+# itself procedural fairness. Decisions of the same kind whose driving-feature
+# sets differ by more than this are reported as inconsistent.
+#
+# Their beta of 0.05 is a p-value threshold for a permutation test over
+# attribution values, which this many decisions cannot support, so the value
+# below is a declared choice of our own rather than theirs.
+divergence_threshold = 0.34
+
+[output]
+directory = "research/results"
+write_json = true
+write_csv = true
+
+[reproducibility]
+# Nothing in this runner is stochastic: the inputs are committed result files
+# and every step is deterministic. The seed is recorded so the results file
+# has the same shape as the other three, and so that adding any sampling later
+# cannot silently become unreproducible.
+random_seed = 20260101
