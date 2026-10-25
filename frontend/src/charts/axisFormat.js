@@ -64,8 +64,12 @@ export function compact(value, { currency = null, decimals = 1 } = {}) {
     })}`;
   }
   const n = abs / unit.divisor;
+  // Keep the fractional digit up to three significant figures. Dropping it
+  // at 10 turned £17,743,000 into "£18M", which loses three quarters of a
+  // million pounds from a headline figure, and rounded a £99,668 bar label
+  // up to a flat "£100K".
   return `${value < 0 ? '-' : ''}${prefix}${n.toLocaleString('en-NZ', {
-    maximumFractionDigits: n < 10 ? decimals : 0,
+    maximumFractionDigits: n < 100 ? decimals : 0,
   })}${unit.suffix}`;
 }
 

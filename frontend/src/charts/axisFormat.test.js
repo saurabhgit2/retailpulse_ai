@@ -37,6 +37,14 @@ describe('compact', () => {
     expect(compact(842)).toBe('842');
   });
 
+  it('keeps a significant digit on a headline figure', () => {
+    // £17,743,000 must not read "£18M": rounding away 0.7 of a million on
+    // the number a dashboard leads with is a three-quarter-million error.
+    expect(compact(17_743_000, { currency: '£' })).toBe('£17.7M');
+    expect(compact(99_668, { currency: '£' })).toBe('£99.7K');
+    expect(compact(164_459, { currency: '£' })).toBe('£164K');
+  });
+
   it('shows an em dash for a value that is genuinely absent', () => {
     // Not "0": a KPI with no source column is unknown, not zero.
     expect(compact(null)).toBe('—');
