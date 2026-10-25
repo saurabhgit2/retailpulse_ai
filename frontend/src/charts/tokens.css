@@ -1,0 +1,116 @@
+/*
+ * Chart tokens.
+ *
+ * Separate from `index.css` on purpose: those tokens are the product's
+ * palette, these are a *measured* set. The eight series hues were checked
+ * with a colour-vision-deficiency validator rather than chosen by eye, and
+ * the order they sit in is the thing being checked, so re-ordering them or
+ * substituting a hue invalidates the result.
+ *
+ * Measured (OKLab Delta E x100, adjacent pairs, which is the pairing a line
+ * or bar chart actually puts side by side):
+ *
+ *   light on #ffffff   worst CVD 9.1 (yellow/aqua, protan) - target >= 8
+ *                      worst normal vision 19.6             - floor >= 15
+ *   dark  on #1a1a19   worst CVD 8.4 (yellow/aqua, protan)
+ *                      worst normal vision 19.3
+ *
+ * Three light hues (aqua, yellow, magenta) sit below 3:1 against white. That
+ * is allowed only because every chart here ships a legend and a table view,
+ * so no value is reachable by colour alone. Remove the table view and this
+ * palette stops being compliant.
+ *
+ * Charts past three series must not invent a ninth colour. Fold the tail into
+ * "Other" or use small multiples; `seriesColor()` in `series.js` enforces it.
+ */
+
+:root {
+  --chart-surface: #ffffff;
+  --chart-grid: #e1e0d9;
+  --chart-axis: #c3c2b7;
+  --chart-ink: #0b0b0b;
+  --chart-ink-2: #52514e;
+  --chart-ink-muted: #898781;
+
+  --series-1: #2a78d6; /* blue */
+  --series-2: #eb6834; /* orange */
+  --series-3: #1baf7a; /* aqua */
+  --series-4: #eda100; /* yellow */
+  --series-5: #e87ba4; /* magenta */
+  --series-6: #008300; /* green */
+  --series-7: #6250d6; /* violet */
+  --series-8: #e34948; /* red */
+
+  /* De-emphasised: the five-of-eight that are context, not the story. */
+  --series-muted: #c3c2b7;
+
+  /* A prediction interval is a wash, not a block. The two values differ
+     because the same opacity over near-black reads heavier than over white. */
+  --chart-band-fill: 0.12;
+  --chart-band-edge: 0.5;
+
+  /* Status. Never reused as a series colour, and never shown without a label. */
+  --chart-good: #0ca30c;
+  --chart-warning: #fab219;
+  --chart-serious: #ec835a;
+  --chart-critical: #d03b3b;
+}
+
+/*
+ * The dark steps are the same eight hues re-stepped for a dark surface and
+ * validated as a set, not an automatic lightening of the light values.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme='light'])) {
+    --chart-surface: #1a1a19;
+    --chart-grid: #2c2c2a;
+    --chart-axis: #383835;
+    --chart-ink: #f0efec;
+    --chart-ink-2: #c3c2b7;
+    --chart-ink-muted: #898781;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+
+    --series-muted: #52514e;
+
+    --chart-band-fill: 0.16;
+    --chart-band-edge: 0.6;
+  }
+}
+
+:root[data-theme='dark'] {
+  --chart-surface: #1a1a19;
+  --chart-grid: #2c2c2a;
+  --chart-axis: #383835;
+  --chart-ink: #f0efec;
+  --chart-ink-2: #c3c2b7;
+  --chart-ink-muted: #898781;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+
+  --series-muted: #52514e;
+
+  --chart-band-fill: 0.16;
+  --chart-band-edge: 0.6;
+}
+
+/* Tick and table numbers are columns, so they align. Stat-tile values are
+   not, and tabular figures make a large standalone number look loose. */
+.chart-tick,
+.chart-table td {
+  font-variant-numeric: tabular-nums;
+}
