@@ -25,7 +25,7 @@ describe('FileDropzone', () => {
 
     await user().upload(inputOf(container), new File(['x'], 'report.pdf', { type: 'application/pdf' }));
     expect(onFileSelected).toHaveBeenCalledWith(null);
-    expect(screen.getByRole('alert')).toHaveTextContent('is not a CSV file');
+    expect(screen.getByRole('alert')).toHaveTextContent('is not a supported file type');
   });
 
   it('rejects a file over the size limit', async () => {
