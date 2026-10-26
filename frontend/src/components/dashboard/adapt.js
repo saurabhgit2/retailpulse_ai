@@ -119,15 +119,30 @@ export function adaptRanked(payload, { limit = 10 } = {}) {
 }
 
 /**
- * Concentration: the Gini coefficient and the Pareto point.
- * Null when the endpoint does not carry them, so the tile reads "not
- * reported" rather than inventing a 0.
+ * Concentration, from what the ranked endpoint actually returns.
+ *
+ * There is no Gini coefficient in this response, and the obvious
+ * substitutes are not available either: the top-20%-of-products share
+ * cannot be computed from ten rows out of several thousand. What the
+ * response does carry is exact — `entities` (how many there are in total),
+ * `total` (the sum across all of them) and a `cumulative_share` on each row
+ * — so the tile reports the share the returned rows account for and says
+ * how many rows that is. A smaller claim, fully supported, beats a bigger
+ * one that needs the whole distribution.
  */
 export function adaptConcentration(payload) {
-  const source = pick(payload, ['concentration', 'pareto'], payload) ?? {};
+  const rows = pick(payload, ['items', 'rows', 'data'], []) ?? [];
+  const last = rows.length ? rows[rows.length - 1] : null;
+  const shown = rows.length;
+  const topShare = num(pick(last ?? {}, ['cumulative_share']));
   return {
-    gini: num(pick(source, ['gini', 'gini_coefficient'])),
-    topShare: num(pick(source, ['top_20_share', 'top20_share', 'pareto_share', 'share_top_20'])),
+    shown,
+    entities: num(pick(payload, ['entities'])),
+    total: num(pick(payload, ['total'])),
+    topShare,
+    // The sort the server actually applied, which is not always the one that
+    // was asked for, and names what `total` and the shares are shares *of*.
+    measure: pick(payload, ['sort']),
   };
 }
 

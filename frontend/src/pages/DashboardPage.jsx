@@ -206,27 +206,37 @@ export function DashboardPage() {
 
         <ChartFrame
           title="Revenue concentration"
-          subtitle="How much of the total a few products account for."
+          subtitle="How much of the total the leading products account for."
           loading={products.loading && !products.data}
           error={products.error}
-          empty={concentration.gini === null && concentration.topShare === null}
-          emptyMessage="This endpoint did not return concentration figures."
+          empty={concentration.topShare === null}
+          emptyMessage="This endpoint did not return cumulative shares."
           height={180}
-          note="A Gini coefficient of 0 would mean every product sells equally; 1 would mean one product is the entire business. Concentration is a reason to check supplier risk, not a fault in itself."
+          note="This is the share the products listed below account for, taken from the cumulative share the server returns on the last of them. It is not a Gini coefficient: that needs the whole distribution, and this endpoint returns only the rows asked for."
         >
           <dl className="space-y-4 py-4">
             <div>
-              <dt className="text-xs text-muted">Gini coefficient</dt>
+              <dt className="text-xs text-muted">
+                Share held by the top {concentration.shown}
+              </dt>
               <dd className="text-3xl font-semibold text-ink">
-                {concentration.gini === null ? '—' : concentration.gini.toFixed(3)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted">Share from the top 20% of products</dt>
-              <dd className="text-xl font-semibold text-ink">
                 {concentration.topShare === null ? '—' : percent(concentration.topShare)}
               </dd>
             </div>
+            <div>
+              <dt className="text-xs text-muted">Products with sales in this period</dt>
+              <dd className="text-xl font-semibold text-ink">
+                {concentration.entities === null ? '—' : exact(concentration.entities)}
+              </dd>
+            </div>
+            {concentration.total !== null ? (
+              <div>
+                <dt className="text-xs text-muted">Total across all of them</dt>
+                <dd className="text-xl font-semibold text-ink">
+                  {compact(concentration.total, { currency: '£' })}
+                </dd>
+              </div>
+            ) : null}
           </dl>
         </ChartFrame>
 
