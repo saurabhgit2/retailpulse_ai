@@ -135,10 +135,23 @@ export function pickDateTicks(values, width, minSpacing = 64) {
   const stride = Math.ceil(values.length / maximum);
   const indices = [];
   for (let i = 0; i < values.length; i += stride) indices.push(i);
-  // Always show the last point: it is the one a reader looks for.
-  if (indices[indices.length - 1] !== values.length - 1) {
-    if (values.length - 1 - indices[indices.length - 1] < stride / 2) indices.pop();
-    indices.push(values.length - 1);
+
+  // Always show the last point: it is the one a reader looks for. Forcing it
+  // in leaves a short gap before it, so the tick it crowds is dropped.
+  const last = values.length - 1;
+  if (indices[indices.length - 1] !== last) {
+    // Measured in pixels, not in strides. A fraction of the stride looks
+    // like the same test but is not: with 107 weekly points in 560px the
+    // remainder was 8 of a 14 stride, which passed the stride test while
+    // leaving the final two labels 42px apart and overlapping.
+    const perPoint = width / Math.max(1, last);
+    while (
+      indices.length > 1 &&
+      (last - indices[indices.length - 1]) * perPoint < minSpacing
+    ) {
+      indices.pop();
+    }
+    indices.push(last);
   }
   return indices;
 }

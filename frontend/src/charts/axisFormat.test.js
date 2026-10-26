@@ -75,6 +75,17 @@ describe('pickDateTicks', () => {
     expect(indices[indices.length - 1]).toBe(52);
   });
 
+  it('drops the tick the forced last label would overlap', () => {
+    // 107 weekly points in 560px: the old rule compared the remainder
+    // against the stride, kept both, and the final two labels collided on
+    // screen. The gap has to be measured where it is seen, in pixels.
+    const weeks = Array.from({ length: 107 }, (_, i) => i);
+    const indices = pickDateTicks(weeks, 560);
+    const perPoint = 560 / 106;
+    const gap = (indices[indices.length - 1] - indices[indices.length - 2]) * perPoint;
+    expect(gap).toBeGreaterThanOrEqual(64);
+  });
+
   it('keeps every label when they all fit', () => {
     expect(pickDateTicks([1, 2, 3], 600)).toEqual([0, 1, 2]);
   });
