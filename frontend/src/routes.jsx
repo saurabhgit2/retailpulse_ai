@@ -10,6 +10,7 @@ import { UploadWizardPage } from './pages/UploadWizardPage';
 import { DataQualityPage } from './pages/DataQualityPage';
 import { ComingSoonPage } from './pages/ComingSoonPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { DashboardPage } from './pages/DashboardPage.jsx';
 
 /**
  * Every URL in the app and the page it shows. Routes nested inside the
@@ -27,6 +28,7 @@ export function AppRoutes() {
         <Route path="datasets" element={<DatasetsPage />} />
         <Route path="upload" element={<UploadWizardPage />} />
         <Route path="datasets/:datasetId/quality" element={<DataQualityPage />} />
+        <Route path="datasets/:datasetId/dashboard" element={<DashboardPage />} />
         {PLANNED_PAGES.map((page) => (
           <Route key={page.path} path={`datasets/:datasetId/${page.path}`} element={<ComingSoonPage page={page} />} />
         ))}

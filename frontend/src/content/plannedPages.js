@@ -6,14 +6,6 @@
  */
 export const PLANNED_PAGES = [
   {
-    path: 'dashboard',
-    label: 'Dashboard',
-    phase: 'Phase 7',
-    capability: 'sales_analytics',
-    summary: 'KPI cards, sales over time, top products and regions, a forecast snapshot and an AI insight summary, all filterable by date, product and region.',
-    endpoints: ['GET /analytics/kpis', 'GET /analytics/trends', 'GET /analytics/products', 'GET /analytics/regions'],
-  },
-  {
     path: 'explore',
     label: 'Explore',
     phase: 'Phase 4',
