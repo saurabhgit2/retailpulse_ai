@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 
 import { BarChart, ChartFrame, LineChart, compact, exact, percent } from '../charts/index.js';
 import { FilterBar } from '../components/layout/FilterBar.jsx';
