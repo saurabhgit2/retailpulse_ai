@@ -5,28 +5,25 @@ import { BarChart, ChartFrame, LineChart, compact, exact, percent } from '../cha
 import { FilterBar } from '../components/layout/FilterBar.jsx';
 import { KpiCard } from '../components/ui/KpiCard.jsx';
 import {
-  adaptBreakdown,
   adaptConcentration,
+  adaptFilterOptions,
   adaptKpis,
+  adaptRanked,
+  adaptRates,
   adaptTrend,
   shapeProblem,
 } from '../components/dashboard/adapt.js';
+import { boundsOf } from '../hooks/filterState.js';
 import { useApi } from '../hooks/useApi.js';
 import { useFilters } from '../hooks/useFilters.js';
-import {
-  getBreakdowns,
-  getFilterOptions,
-  getKpis,
-  getTrends,
-} from '../services/analytics.js';
+import { getFilterOptions, getKpis, getProducts, getTrends } from '../services/analytics.js';
 
 /**
  * The dashboard.
  *
  * Three questions in the order a category manager asks them: how did we do,
- * how is it moving, and where does it come from. Everything on the page
- * answers to the single filter row at the top, so the figures always agree
- * with one another.
+ * how is it moving, and where does it come from. Everything answers to the
+ * single filter row at the top, so the figures always agree with each other.
  */
 export function DashboardPage() {
   const { datasetId } = useParams();
@@ -35,14 +32,15 @@ export function DashboardPage() {
     (signal) => getFilterOptions(datasetId, { signal }),
     [datasetId],
   );
-  const { data: options } = useApi(loadOptions);
-  const bounds = options?.date_range ?? options?.bounds ?? null;
+  const { data: optionsRaw } = useApi(loadOptions);
+  const options = useMemo(() => adaptFilterOptions(optionsRaw), [optionsRaw]);
+  const bounds = useMemo(() => boundsOf(optionsRaw), [optionsRaw]);
 
   const { filters, update, reset, query } = useFilters(bounds);
 
-  // The query object is rebuilt on every render, so a dependency on it alone
-  // would re-fetch forever. Serialising it gives a value that only changes
-  // when the filters actually change.
+  // The query object is rebuilt on every render, so depending on it directly
+  // would re-fetch forever. Serialising gives a value that changes only when
+  // the filters actually change.
   const queryKey = useMemo(() => JSON.stringify(query), [query]);
 
   const loadKpis = useCallback(
@@ -56,7 +54,11 @@ export function DashboardPage() {
     [datasetId, queryKey],
   );
   const loadProducts = useCallback(
-    (signal) => getBreakdowns(datasetId, { query: { ...query, dimension: 'product', limit: 10 }, signal }),
+    (signal) =>
+      getProducts(datasetId, {
+        query: { ...query, sort: 'net_revenue', order: 'desc', limit: 10 },
+        signal,
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [datasetId, queryKey],
   );
@@ -66,12 +68,16 @@ export function DashboardPage() {
   const products = useApi(loadProducts);
 
   const figures = useMemo(() => adaptKpis(kpis.data), [kpis.data]);
+  const rates = useMemo(() => adaptRates(kpis.data), [kpis.data]);
   const trend = useMemo(() => adaptTrend(trends.data), [trends.data]);
-  const topProducts = useMemo(() => adaptBreakdown(products.data), [products.data]);
+  const topProducts = useMemo(() => adaptRanked(products.data), [products.data]);
   const concentration = useMemo(() => adaptConcentration(products.data), [products.data]);
 
   const trendProblem = trends.data
     ? shapeProblem(trends.data, ['points', 'series', 'rows', 'data', 'periods'])
+    : null;
+  const productProblem = products.data
+    ? shapeProblem(products.data, ['items', 'products', 'rows', 'data'])
     : null;
 
   return (
@@ -94,7 +100,10 @@ export function DashboardPage() {
         disabled={kpis.loading && !kpis.data}
       />
 
-      <section aria-label="Headline figures" className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <section
+        aria-label="Headline figures"
+        className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
+      >
         {figures.map((f) => (
           <KpiCard
             key={f.key}
@@ -111,6 +120,21 @@ export function DashboardPage() {
           />
         ))}
       </section>
+
+      {rates.returnRate !== null || rates.guestShare !== null ? (
+        <p className="mb-4 text-xs text-muted">
+          {rates.returnRate !== null
+            ? `Returns account for ${percent(rates.returnRate)} of gross revenue${
+                rates.returnsValue !== null
+                  ? ` (${exact(rates.returnsValue, { currency: '£' })})`
+                  : ''
+              }. `
+            : ''}
+          {rates.guestShare !== null
+            ? `${percent(rates.guestShare)} of revenue comes from orders with no customer identifier, which the pipeline keeps as guest sales rather than discarding.`
+            : ''}
+        </p>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -136,6 +160,19 @@ export function DashboardPage() {
                 orders: exact(trend.orders[i]),
               })),
             }}
+            series={
+              trend.movingAverage.some((v) => Number.isFinite(v))
+                ? [
+                    { key: 'revenue', label: 'Net revenue', color: 'var(--series-1)' },
+                    {
+                      key: 'ma',
+                      label: 'Moving average',
+                      color: 'var(--series-2)',
+                      dashed: true,
+                    },
+                  ]
+                : []
+            }
           >
             <LineChart
               x={trend.x}
@@ -149,6 +186,17 @@ export function DashboardPage() {
                   // because plotting it invites exactly the wrong reading.
                   values: trend.revenue.map((v, i) => (trend.partial[i] ? null : v)),
                 },
+                ...(trend.movingAverage.some((v) => Number.isFinite(v))
+                  ? [
+                      {
+                        key: 'ma',
+                        label: 'Moving average',
+                        color: 'var(--series-2)',
+                        values: trend.movingAverage,
+                        dashed: true,
+                      },
+                    ]
+                  : []),
               ]}
               currency="£"
               height={280}
@@ -185,12 +233,15 @@ export function DashboardPage() {
         <div className="lg:col-span-3">
           <ChartFrame
             title="Top products by net revenue"
-            subtitle={`The ten largest contributors in the selected period.`}
+            subtitle="The ten largest contributors in the selected period."
             loading={products.loading && !products.data}
             refreshing={products.loading && Boolean(products.data)}
             error={products.error}
-            empty={topProducts.length === 0}
-            note="Product names are the canonical name chosen by the cleaning pipeline, which takes the most frequent description per stock code; variant spellings are counted together."
+            empty={!productProblem && topProducts.length === 0}
+            note={
+              productProblem ??
+              'Product names are the canonical name chosen by the cleaning pipeline, which takes the most frequent description per stock code; variant spellings are counted together.'
+            }
             table={{
               caption: 'Top products by net revenue',
               columns: [

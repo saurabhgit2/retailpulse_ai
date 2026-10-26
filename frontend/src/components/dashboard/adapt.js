@@ -1,12 +1,12 @@
 /**
  * The one place the page assumes anything about the analytics response shape.
  *
- * Why this exists rather than reading `data.series.revenue` inside the chart:
- * the page was written against the contract in the backend guide, not against
- * a running server. If a field is spelled differently, the fix is one line
- * here instead of a hunt through four components, and `shapeProblem()` says
- * what was missing rather than rendering an empty chart that looks like a
- * dataset with no sales.
+ * The KPI and filter-options shapes below are now taken from the server's
+ * OpenAPI schema rather than guessed. Trends and products are declared there
+ * only as free-form objects, so those two still try a short list of
+ * candidate field names, and `shapeProblem()` reports what actually arrived
+ * instead of rendering an empty chart that looks like a dataset with no
+ * sales.
  */
 
 /** First present, non-null value among several candidate field names. */
@@ -25,84 +25,122 @@ const num = (v) => {
 };
 
 /**
- * Headline figures.
+ * Headline figures, from the documented KpiResponse:
  *
- * A null value is rendered as "not available" with its reason, never as
- * zero. The backend withholds a KPI whose source column is absent and
- * withholds growth when the two comparison windows are not the same length;
- * both of those are claims, and showing 0 or 0% would be a different claim.
+ *   { values: KpiValues, previous, growth: {field: number|null}|null,
+ *     comparison: { comparable: boolean, note: string|null } }
+ *
+ * A null value renders as "not available" with its reason, never as zero.
+ * The server withholds a KPI whose source column is absent and withholds
+ * growth when the two windows are not comparable; both of those are claims,
+ * and 0 or 0% would be a different claim.
  */
 export function adaptKpis(payload) {
-  const k = pick(payload, ['kpis', 'values', 'data'], payload) ?? {};
-  const growth = pick(payload, ['growth', 'comparison'], {}) ?? {};
-  const note = pick(payload, ['growth_note', 'comparison_note', 'note'], null);
+  const values = payload?.values ?? {};
+  const growth = payload?.growth ?? {};
+  const comparison = payload?.comparison ?? null;
+  // The reason comparison was refused lives on the comparison object, not at
+  // the top level, and it is what the card shows in place of a figure.
+  const note = comparison && comparison.comparable === false ? comparison.note : null;
 
   const definitions = [
-    { key: 'revenue', label: 'Net revenue', names: ['revenue', 'net_revenue', 'total_revenue'], currency: '£' },
-    { key: 'orders', label: 'Orders', names: ['orders', 'order_count', 'invoices'] },
-    { key: 'customers', label: 'Customers', names: ['customers', 'customer_count', 'unique_customers'] },
-    { key: 'aov', label: 'Average order value', names: ['aov', 'average_order_value'], currency: '£' },
-    { key: 'units', label: 'Units sold', names: ['units', 'quantity', 'total_quantity'] },
+    { key: 'net_revenue', label: 'Net revenue', currency: '£' },
+    { key: 'orders', label: 'Orders' },
+    { key: 'active_customers', label: 'Active customers' },
+    { key: 'average_order_value', label: 'Average order value', currency: '£' },
+    { key: 'units', label: 'Units sold' },
   ];
 
   return definitions.map((d) => ({
     key: d.key,
     label: d.label,
-    value: num(pick(k, d.names)),
-    growth: num(pick(growth, d.names)),
+    value: num(values[d.key]),
+    growth: num(growth?.[d.key]),
     currency: d.currency ?? null,
     note,
   }));
 }
 
 /**
+ * Secondary figures that only make sense as rates, kept apart from the
+ * headline row so a percentage never sits in a column of money.
+ */
+export function adaptRates(payload) {
+  const values = payload?.values ?? {};
+  return {
+    returnRate: num(values.return_rate),
+    guestShare: num(values.guest_revenue_share),
+    returnsValue: num(values.returns_value),
+    grossRevenue: num(values.gross_revenue),
+    lines: num(values.lines),
+  };
+}
+
+/**
  * A time series.
  *
- * Accepts either a list of row objects or parallel arrays, because both
- * shapes are reasonable and the guide does not say which the endpoint
- * returns. Partial periods are carried through so the last point can be
- * drawn as what it is: an incomplete week, not a collapse in trade.
+ * Accepts either a list of row objects or parallel arrays, because the
+ * schema declares this response as a free-form object and does not say
+ * which. Partial periods are carried through so the last point can be drawn
+ * as what it is: an incomplete week, not a collapse in trade.
  */
 export function adaptTrend(payload) {
   const rows = pick(payload, ['points', 'series', 'rows', 'data'], []);
   if (Array.isArray(rows) && rows.length && typeof rows[0] === 'object') {
     return {
-      x: rows.map((r) => pick(r, ['period', 'week_start', 'date', 'occurred_at', 'bucket'])),
-      revenue: rows.map((r) => num(pick(r, ['revenue', 'net_revenue', 'value']))),
+      x: rows.map((r) => pick(r, ['period', 'period_start', 'week_start', 'date', 'bucket'])),
+      revenue: rows.map((r) => num(pick(r, ['net_revenue', 'revenue', 'gross_revenue', 'value']))),
       orders: rows.map((r) => num(pick(r, ['orders', 'order_count']))),
+      movingAverage: rows.map((r) => num(pick(r, ['moving_average', 'ma']))),
       partial: rows.map((r) => Boolean(pick(r, ['is_partial', 'partial'], false))),
     };
   }
   const x = pick(payload, ['periods', 'index', 'labels'], []) ?? [];
   return {
     x,
-    revenue: (pick(payload, ['revenue'], []) ?? []).map(num),
+    revenue: (pick(payload, ['net_revenue', 'revenue'], []) ?? []).map(num),
     orders: (pick(payload, ['orders'], []) ?? []).map(num),
+    movingAverage: (pick(payload, ['moving_average', 'ma'], []) ?? []).map(num),
     partial: pick(payload, ['is_partial', 'partial'], x.map(() => false)) ?? [],
   };
 }
 
-/** A ranked breakdown: products, regions or categories. */
-export function adaptBreakdown(payload, { limit = 10 } = {}) {
-  const rows = pick(payload, ['items', 'rows', 'breakdown', 'data'], []) ?? [];
+/** A ranked list: products, regions, categories or customers. */
+export function adaptRanked(payload, { limit = 10 } = {}) {
+  const rows = pick(payload, ['items', 'products', 'regions', 'categories', 'customers', 'rows', 'data'], []) ?? [];
   return rows.slice(0, limit).map((r, i) => ({
-    key: String(pick(r, ['key', 'code', 'product_code', 'id'], i)),
-    label: String(pick(r, ['label', 'name', 'description', 'product_name', 'region', 'category'], '—')),
-    value: num(pick(r, ['value', 'revenue', 'net_revenue', 'total'])) ?? 0,
-    share: num(pick(r, ['share', 'pareto_share', 'cumulative_share'])),
+    key: String(pick(r, ['product_code', 'code', 'key', 'region', 'category', 'customer_id', 'id'], i)),
+    label: String(
+      pick(r, ['description', 'product_name', 'name', 'label', 'region', 'category'], '—'),
+    ),
+    value: num(pick(r, ['net_revenue', 'gross_revenue', 'revenue', 'value', 'units', 'orders'])) ?? 0,
+    share: num(pick(r, ['share', 'revenue_share', 'pareto_share', 'cumulative_share'])),
   }));
 }
 
 /**
  * Concentration: the Gini coefficient and the Pareto point.
- * Returned as null when the endpoint does not carry them, so the tile says
- * "not reported" rather than inventing a 0.
+ * Null when the endpoint does not carry them, so the tile reads "not
+ * reported" rather than inventing a 0.
  */
 export function adaptConcentration(payload) {
   const source = pick(payload, ['concentration', 'pareto'], payload) ?? {};
   return {
     gini: num(pick(source, ['gini', 'gini_coefficient'])),
-    topShare: num(pick(source, ['top_20_share', 'top20_share', 'pareto_share'])),
+    topShare: num(pick(source, ['top_20_share', 'top20_share', 'pareto_share', 'share_top_20'])),
+  };
+}
+
+/** Region names and categories for the filter bar, from FilterOptions. */
+export function adaptFilterOptions(payload) {
+  const regions = (payload?.regions ?? []).map((r) =>
+    typeof r === 'string' ? r : String(pick(r, ['region', 'name', 'label', 'value'], '')),
+  );
+  return {
+    regions: regions.filter(Boolean),
+    categories: (payload?.categories ?? []).filter(Boolean),
+    customerTypes: payload?.customer_types ?? [],
+    rows: payload?.rows ?? null,
   };
 }
 
