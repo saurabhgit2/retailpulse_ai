@@ -9,7 +9,14 @@ const linkClasses = ({ isActive }) =>
   `flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm ${
     isActive ? 'bg-accent-soft font-semibold text-accent' : 'text-ink-2 hover:bg-surface-2 hover:text-ink'
   }`;
-
+/**
+ * Pages that are built, in the shape PLANNED_PAGES uses minus the phase tag.
+ * Keeping them in one list means the capability rule and the disabled state
+ * are written once, and promoting a page is a move between two arrays.
+ */
+const BUILT_PAGES = [
+  { path: 'dashboard', label: 'Dashboard', capability: 'sales_analytics' },
+];
 function NavSection({ title, children }) {
   return (
     <div>
@@ -56,7 +63,7 @@ export function Sidebar({ onNavigate }) {
               Data quality
             </NavLink>
           </li>
-          {PLANNED_PAGES.map((page) => {
+            {[...BUILT_PAGES, ...PLANNED_PAGES].map((page) => {
             const capability = capabilities.get(page.capability);
             const unavailable = isReady && capability && !capability.enabled;
             if (unavailable) {
@@ -80,7 +87,11 @@ export function Sidebar({ onNavigate }) {
                   onClick={onNavigate}
                 >
                   {page.label}
-                  <span className="font-mono text-[10px] text-muted">{page.phase.replace('Phase ', 'P')}</span>
+                  {page.phase ? (
+                    <span className="font-mono text-[10px] text-muted">
+                      {page.phase.replace('Phase ', 'P')}
+                    </span>
+                  ) : null}
                 </NavLink>
               </li>
             );
