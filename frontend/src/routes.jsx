@@ -12,6 +12,7 @@ import { ComingSoonPage } from './pages/ComingSoonPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { DashboardPage } from './pages/DashboardPage.jsx';
 import { ForecastingPage } from './pages/ForecastingPage.jsx';
+import { CustomersPage } from './pages/CustomersPage.jsx';
 /**
  * Every URL in the app and the page it shows. Routes nested inside the
  * <AppShell> route render in its <Outlet />, so they all share the sidebar and
@@ -30,6 +31,7 @@ export function AppRoutes() {
         <Route path="datasets/:datasetId/quality" element={<DataQualityPage />} />
         <Route path="datasets/:datasetId/dashboard" element={<DashboardPage />} />
         <Route path="datasets/:datasetId/forecasting" element={<ForecastingPage />} />
+        <Route path="datasets/:datasetId/customers" element={<CustomersPage />} />
         {PLANNED_PAGES.map((page) => (
           <Route key={page.path} path={`datasets/:datasetId/${page.path}`} element={<ComingSoonPage page={page} />} />
         ))}

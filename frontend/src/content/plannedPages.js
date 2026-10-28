@@ -21,15 +21,6 @@ export const PLANNED_PAGES = [
     summary: 'Descriptive statistics with method explanations, entropy and mutual information, and model-based feature importance compared side by side.',
     endpoints: ['GET /analytics/statistics', 'GET /analytics/features', 'GET /analytics/series-profile'],
   },
-
-  {
-    path: 'customers',
-    label: 'Customers',
-    phase: 'Phase 5b',
-    capability: 'segmentation',
-    summary: 'RFM segments from three clustering algorithms, their quality scores, and how stable they are across time windows (RQ2).',
-    endpoints: ['POST /segmentations', 'GET /segmentations/{run_id}'],
-  },
   {
     path: 'baskets',
     label: 'Baskets',
