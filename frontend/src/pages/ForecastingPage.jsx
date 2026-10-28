@@ -43,11 +43,20 @@ export function ForecastingPage() {
   // While a run we started is in flight, poll it. usePolling chains timeouts
   // rather than using an interval, so a slow response cannot stack up behind
   // itself, which is the same machinery the upload wizard uses.
+  //
+  // The fetcher takes the abort signal, so a response that arrives after the
+  // page has moved on cannot set state on an unmounted component. Four
+  // seconds rather than the shared default: a forecast run takes about two
+  // minutes, so a faster poll is thirty wasted requests.
   const poll = useCallback(
-    () => getRun(datasetId, startedId),
+    (signal) => getRun(datasetId, startedId, { signal }),
     [datasetId, startedId],
   );
-  const polled = usePolling(startedId ? poll : null, isFinished, 4000);
+  const polled = usePolling(poll, {
+    isDone: isFinished,
+    intervalMs: 4000,
+    enabled: Boolean(startedId),
+  });
 
   const run = useMemo(
     () => adaptRun(polled.data) ?? adaptRun(latest.data),
@@ -120,6 +129,22 @@ export function ForecastingPage() {
           A new experiment is running. This takes about two minutes; the results below are from the
           previous run until it finishes.
         </p>
+      ) : null}
+
+      {polled.error ? (
+        <div role="alert" className="mb-4 rounded border border-crit/30 bg-crit/5 p-3 text-sm">
+          <p className="text-ink">
+            Lost track of the running experiment. It may still finish on the server.
+          </p>
+          <p className="mt-1 text-muted">{polled.error.message ?? String(polled.error)}</p>
+          <button
+            type="button"
+            onClick={polled.retry}
+            className="mt-2 rounded border border-rule px-2 py-1 text-xs text-muted hover:text-ink"
+          >
+            Check again
+          </button>
+        </div>
       ) : null}
 
       <section className="mb-4 grid gap-3 sm:grid-cols-3">
