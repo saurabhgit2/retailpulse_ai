@@ -39,6 +39,9 @@ export function axisFormatter(ticks, { currency = null } = {}) {
   const prefix = currency ?? '';
   return (value) => {
     if (value === null || value === undefined || !Number.isFinite(value)) return '';
+    // Zero carries no unit. "0.0K" is a thousand of nothing and reads as a
+    // rounding artefact on the axis a bar chart sits on.
+    if (value === 0) return `${prefix}0`;
     const n = value / unit.divisor;
     const sign = n < 0 ? '-' : '';
     const body = Math.abs(n).toLocaleString('en-NZ', {
@@ -129,26 +132,33 @@ export function dateFull(value) {
  * breathing room.
  */
 export function pickDateTicks(values, width, minSpacing = 64) {
-  if (values.length === 0) return [];
-  const maximum = Math.max(1, Math.floor(width / minSpacing));
-  if (values.length <= maximum) return values.map((_, i) => i);
-  const stride = Math.ceil(values.length / maximum);
-  const indices = [];
-  for (let i = 0; i < values.length; i += stride) indices.push(i);
+  return thinLabels(values.length, width, minSpacing);
+}
 
-  // Always show the last point: it is the one a reader looks for. Forcing it
-  // in leaves a short gap before it, so the tick it crowds is dropped.
-  const last = values.length - 1;
+/**
+ * Which of `count` evenly spaced labels to draw in `width` pixels.
+ *
+ * Shared by the date axis and the column axis, because both got the same
+ * thing wrong independently: taking every nth label and then forcing the last
+ * one in leaves a short gap before it, and the label it crowds has to go.
+ *
+ * The gap is measured in pixels, not in strides. A fraction of the stride
+ * looks like the same test and is not: with 107 weekly points in 560px the
+ * remainder was 8 of a 14 stride, which passed, while leaving the final two
+ * labels 42px apart and overlapping on screen.
+ */
+export function thinLabels(count, width, minSpacing = 64) {
+  if (count <= 0) return [];
+  const maximum = Math.max(1, Math.floor(width / minSpacing));
+  if (count <= maximum) return Array.from({ length: count }, (_, i) => i);
+  const stride = Math.ceil(count / maximum);
+  const indices = [];
+  for (let i = 0; i < count; i += stride) indices.push(i);
+
+  const last = count - 1;
   if (indices[indices.length - 1] !== last) {
-    // Measured in pixels, not in strides. A fraction of the stride looks
-    // like the same test but is not: with 107 weekly points in 560px the
-    // remainder was 8 of a 14 stride, which passed the stride test while
-    // leaving the final two labels 42px apart and overlapping.
-    const perPoint = width / Math.max(1, last);
-    while (
-      indices.length > 1 &&
-      (last - indices[indices.length - 1]) * perPoint < minSpacing
-    ) {
+    const perStep = width / Math.max(1, last);
+    while (indices.length > 1 && (last - indices[indices.length - 1]) * perStep < minSpacing) {
       indices.pop();
     }
     indices.push(last);

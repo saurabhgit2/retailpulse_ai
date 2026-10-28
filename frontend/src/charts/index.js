@@ -4,6 +4,7 @@ export { Legend } from './Legend.jsx';
 export { LineChart } from './LineChart.jsx';
 export { BarChart } from './BarChart.jsx';
 export { SlopeChart } from './SlopeChart.jsx';
+export { ColumnChart } from './ColumnChart.jsx';
 export { useChartSize } from './useChartSize.js';
 export {
   axisFormatter,

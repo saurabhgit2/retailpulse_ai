@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { axisFormatter, axisUnit, compact, dateTick, pickDateTicks } from './axisFormat.js';
+import {
+  axisFormatter,
+  axisUnit,
+  compact,
+  dateTick,
+  pickDateTicks,
+  thinLabels,
+} from './axisFormat.js';
 
 describe('axisUnit', () => {
   it('chooses one unit for the whole axis from its largest tick', () => {
@@ -11,9 +18,9 @@ describe('axisUnit', () => {
 });
 
 describe('axisFormatter', () => {
-  it('applies that one unit to every tick', () => {
+  it('applies that one unit to every tick above zero', () => {
     const f = axisFormatter([0, 400, 800, 1200]);
-    expect([0, 400, 800, 1200].map(f)).toEqual(['0.0K', '0.4K', '0.8K', '1.2K']);
+    expect([0, 400, 800, 1200].map(f)).toEqual(['0', '0.4K', '0.8K', '1.2K']);
   });
 
   it('uses whole numbers when the ticks are whole', () => {
@@ -28,6 +35,14 @@ describe('axisFormatter', () => {
 
   it('renders an unplottable tick as nothing, not as NaN', () => {
     expect(axisFormatter([0, 10])(null)).toBe('');
+  });
+
+  it('gives zero no unit', () => {
+    // "0.0K" is a thousand of nothing, and it reads as a rounding artefact
+    // on the axis every bar chart sits on.
+    expect(axisFormatter([0, 500, 1000, 1500])(0)).toBe('0');
+    expect(axisFormatter([0, 500, 1000, 1500], { currency: '£' })(0)).toBe('£0');
+    expect(axisFormatter([0, 500, 1000, 1500])(500)).toBe('0.5K');
   });
 });
 
@@ -88,5 +103,30 @@ describe('pickDateTicks', () => {
 
   it('keeps every label when they all fit', () => {
     expect(pickDateTicks([1, 2, 3], 600)).toEqual([0, 1, 2]);
+  });
+});
+
+describe('thinLabels', () => {
+  it('keeps every label when they all fit', () => {
+    expect(thinLabels(4, 600, 46)).toEqual([0, 1, 2, 3]);
+  });
+
+  it('always keeps the last label', () => {
+    const picked = thinLabels(26, 770, 46);
+    expect(picked[picked.length - 1]).toBe(25);
+  });
+
+  it('drops the label the forced last one would crowd', () => {
+    // 26 bins in 770px: taking every second and then forcing the last left
+    // 24 and 25 adjacent, and "96-99w" overlapped "100-103w" on screen.
+    const picked = thinLabels(26, 770, 46);
+    const perStep = 770 / 25;
+    const gap = (picked[picked.length - 1] - picked[picked.length - 2]) * perStep;
+    expect(gap).toBeGreaterThanOrEqual(46);
+  });
+
+  it('survives a zero count and a zero width', () => {
+    expect(thinLabels(0, 500)).toEqual([]);
+    expect(thinLabels(5, 0, 46)).toEqual([0, 4]);
   });
 });
