@@ -21,14 +21,7 @@ export const PLANNED_PAGES = [
     summary: 'Descriptive statistics with method explanations, entropy and mutual information, and model-based feature importance compared side by side.',
     endpoints: ['GET /analytics/statistics', 'GET /analytics/features', 'GET /analytics/series-profile'],
   },
-  {
-    path: 'forecasting',
-    label: 'Forecasting',
-    phase: 'Phase 5',
-    capability: 'demand_forecasting',
-    summary: 'Configure and run forecasts, compare models (MAE, RMSE, WAPE, MASE, MAPE), view actual vs predicted, and see significance tests (RQ1).',
-    endpoints: ['POST /forecasts', 'GET /forecasts/{run_id}', 'GET /forecasts/{run_id}/series'],
-  },
+
   {
     path: 'customers',
     label: 'Customers',
