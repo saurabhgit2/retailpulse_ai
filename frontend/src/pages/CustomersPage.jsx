@@ -396,11 +396,11 @@ function slopeNote(segments) {
   const biggest = byCustomers[0];
   const richest = segments[0];
   if (!biggest || !richest) return null;
-  return `${biggest.label} is the largest group at ${percent(
+  return `${biggest.label} is the largest band at ${percent(
     biggest.customerShare,
   )} of customers but carries ${percent(
     biggest.monetaryShare,
-  )} of revenue, while ${richest.label.toLowerCase()} is ${percent(
+  )} of revenue, while the ${richest.label.toLowerCase()} band is ${percent(
     richest.customerShare,
   )} of customers and ${percent(
     richest.monetaryShare,
