@@ -26,6 +26,7 @@ k-means is sensitive to outliers and to variables on incomparable scales.
 
 from __future__ import annotations
 
+import math
 from decimal import Decimal
 
 import numpy as np
@@ -228,7 +229,7 @@ def build_rfm(
             "quintiles collapse and segments built on them will be thin."
         )
 
-    return {
+    return _storable({
         "available": True,
         "customers": int(len(frame)),
         "as_of": reference.date().isoformat(),
@@ -255,7 +256,7 @@ def build_rfm(
         # database layer is not JSON serialisable, and the failure surfaces as
         # an opaque 500 rather than anything that points at this line.
         "table": _json_safe(frame.drop(columns=["first_purchase", "last_purchase"])),
-    }
+    })
 
 
 def _json_safe(frame: pd.DataFrame) -> list[dict[str, object]]:
@@ -271,3 +272,26 @@ def _json_safe(frame: pd.DataFrame) -> list[dict[str, object]]:
                 lambda value: float(value) if isinstance(value, Decimal) else value
             )
     return safe.to_dict(orient="records")
+
+    
+def _storable(value: object) -> object:
+    """Replace non-finite floats with None, recursively.
+
+    NaN and infinity are valid Python floats and valid numpy results, and
+    `json.dumps` will happily emit them, but neither is valid JSON.
+    PostgreSQL's json type rejects the literal and the insert dies with
+    `Token "NaN" is invalid`, which surfaces as an opaque 500 a long way from
+    the arithmetic that produced it.
+
+    They are not an error in the arithmetic. An average order value for a
+    customer with no invoices, or a skewness for a column whose values are all
+    identical, is genuinely not computable, and `None` is what this project
+    says that means. This converts the representation, not the claim.
+    """
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {key: _storable(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_storable(item) for item in value]
+    return value

@@ -7,6 +7,8 @@ happens in Phase 5b. The tests protect the definitions, not the clustering.
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -166,3 +168,31 @@ def test_the_skew_direction_matches_its_sign():
     assert result["distributions"]["monetary"]["skewness"] < 0
     assert "left-skewed" in notes
     assert "right-skewed" not in notes
+
+
+def test_a_customer_with_no_invoices_does_not_poison_the_cache():
+    """A NaN in the result is valid Python and invalid JSON.
+
+    Returns are kept rather than deleted, so a customer whose every
+    transaction is a return has a negative monetary value and zero invoices.
+    Their average order value is genuinely not computable, and np.nan is the
+    right answer in pandas and the wrong one in PostgreSQL, which refuses the
+    literal and fails the insert a long way from this arithmetic.
+    """
+    customers = pd.DataFrame([
+        {"customer": "C1", "first_purchase": "2010-01-10", "last_purchase": "2011-01-10",
+         "frequency": 3, "monetary_gross": 300.0, "returns_value": 10.0,
+         "units": 30, "lines": 9},
+        {"customer": "C2", "first_purchase": "2011-02-10", "last_purchase": "2011-02-10",
+         "frequency": 0, "monetary_gross": 0.0, "returns_value": 29.75,
+         "units": 1, "lines": 1},
+    ])
+
+    result = build_rfm(customers, as_of=END)
+
+    # allow_nan=False fails here the way PostgreSQL fails on insert, rather
+    # than silently writing a NaN literal that breaks much further away.
+    json.dumps(result, allow_nan=False)
+
+    row = next(r for r in result["table"] if r["customer"] == "C2")
+    assert row["average_order_value"] is None
