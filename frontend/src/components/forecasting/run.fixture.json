@@ -1,0 +1,617 @@
+{
+  "id": "125b94d9-13e2-4731-919e-042e0717edaf",
+  "status": "ready",
+  "error": null,
+  "created_at": "2026-10-27T09:13:55.005366+00:00",
+  "finished_at": "2026-10-27T09:15:48.941533+00:00",
+  "config_hash": "8f64f03cd179598b80734dc1ae6a5c8439fb592d3805460b9a259b11394339d6",
+  "primary_metric": "WAPE",
+  "series": {
+    "granularity": "week",
+    "value_column": "net_revenue",
+    "gap_periods": [
+      "2009-12-28",
+      "2010-12-27"
+    ],
+    "gaps_filled_with_zero": 2,
+    "gap_note": "2 period(s) had no rows at all and were filled with zero so the series is evenly spaced, which every model here assumes. A zero from a closure is not the same as zero demand - see the closure calendar in the data-quality report before reading these as weak weeks.",
+    "incomplete_final_periods_dropped": 1,
+    "incomplete_note": "Dropped 1 incomplete period(s) at the end. A partial period looks like a collapse in demand and would be learned as one."
+  },
+  "protocol": {
+    "style": "expanding",
+    "horizon": 12,
+    "observations": 105,
+    "notes": [
+      "Training windows expand: each fold uses all history before its origin. Chu & Zhang (2003) instead held the in-sample length fixed; with about two years of weekly data here, discarding early history would leave too little to estimate a yearly cycle."
+    ],
+    "folds": [
+      {
+        "fold": 1,
+        "style": "expanding",
+        "horizon": 12,
+        "test_end": "2010-12-27",
+        "train_end": "2010-10-04",
+        "test_start": "2010-10-11",
+        "train_size": 45,
+        "train_start": "2009-11-30"
+      },
+      {
+        "fold": 2,
+        "style": "expanding",
+        "horizon": 12,
+        "test_end": "2011-03-21",
+        "train_end": "2010-12-27",
+        "test_start": "2011-01-03",
+        "train_size": 57,
+        "train_start": "2009-11-30"
+      },
+      {
+        "fold": 3,
+        "style": "expanding",
+        "horizon": 12,
+        "test_end": "2011-06-13",
+        "train_end": "2011-03-21",
+        "test_start": "2011-03-28",
+        "train_size": 69,
+        "train_start": "2009-11-30"
+      },
+      {
+        "fold": 4,
+        "style": "expanding",
+        "horizon": 12,
+        "test_end": "2011-09-05",
+        "train_end": "2011-06-13",
+        "test_start": "2011-06-20",
+        "train_size": 81,
+        "train_start": "2009-11-30"
+      }
+    ],
+    "holdout": {
+      "fold": 0,
+      "style": "expanding",
+      "horizon": 12,
+      "test_end": "2011-11-28",
+      "train_end": "2011-09-05",
+      "test_start": "2011-09-12",
+      "train_size": 93,
+      "train_start": "2009-11-30"
+    }
+  },
+  "summary": [
+    {
+      "model": "moving_average",
+      "sd_wape": 10.4638698315,
+      "mean_wape": 20.8578639077,
+      "worst_wape": 34.031560171,
+      "first_error": null,
+      "folds_failed": 0,
+      "folds_scored": 4,
+      "uses_exogenous": false
+    },
+    {
+      "model": "seasonal_naive",
+      "sd_wape": 8.5392121819,
+      "mean_wape": 21.1409889637,
+      "worst_wape": 32.660533401,
+      "first_error": null,
+      "folds_failed": 0,
+      "folds_scored": 4,
+      "uses_exogenous": false
+    },
+    {
+      "model": "combination_median",
+      "sd_wape": 8.895906778,
+      "mean_wape": 22.1646368979,
+      "worst_wape": 32.7296144427,
+      "first_error": null,
+      "folds_failed": 0,
+      "folds_scored": 4,
+      "uses_exogenous": false
+    },
+    {
+      "model": "fourier",
+      "sd_wape": 6.5894912188,
+      "mean_wape": 23.728080129,
+      "worst_wape": 32.9427084487,
+      "first_error": null,
+      "folds_failed": 0,
+      "folds_scored": 4,
+      "uses_exogenous": false
+    },
+    {
+      "model": "gbt_global",
+      "sd_wape": 38.7057268486,
+      "mean_wape": 42.1926012842,
+      "worst_wape": 100,
+      "first_error": null,
+      "folds_failed": 0,
+      "folds_scored": 4,
+      "uses_exogenous": true
+    },
+    {
+      "model": "naive",
+      "sd_wape": 38.5939349943,
+      "mean_wape": 43.0340035001,
+      "worst_wape": 100,
+      "first_error": null,
+      "folds_failed": 0,
+      "folds_scored": 4,
+      "uses_exogenous": false
+    },
+    {
+      "model": "ets",
+      "sd_wape": 38.3393454337,
+      "mean_wape": 43.3491544447,
+      "worst_wape": 100.0419529671,
+      "first_error": null,
+      "folds_failed": 0,
+      "folds_scored": 4,
+      "uses_exogenous": false
+    },
+    {
+      "model": "seasonal_naive_drift",
+      "sd_wape": 49.5782277119,
+      "mean_wape": 48.6189533576,
+      "worst_wape": 122.0558627114,
+      "first_error": null,
+      "folds_failed": 0,
+      "folds_scored": 4,
+      "uses_exogenous": false
+    }
+  ],
+  "holdout": [
+    {
+      "model": "combination_median",
+      "fold": 0,
+      "is_holdout": true,
+      "uses_exogenous": false,
+      "wape": 35.5982,
+      "mae": 99412.4535,
+      "smape": 41.1771,
+      "error": null
+    },
+    {
+      "model": "ets",
+      "fold": 0,
+      "is_holdout": true,
+      "uses_exogenous": false,
+      "wape": 36.5997,
+      "mae": 102209.2973,
+      "smape": 42.669,
+      "error": null
+    },
+    {
+      "model": "fourier",
+      "fold": 0,
+      "is_holdout": true,
+      "uses_exogenous": false,
+      "wape": 18.6008,
+      "mae": 51945.1745,
+      "smape": 19.107,
+      "error": null
+    },
+    {
+      "model": "gbt_global",
+      "fold": 0,
+      "is_holdout": true,
+      "uses_exogenous": true,
+      "wape": 41.5228,
+      "mae": 115957.5594,
+      "smape": 46.6149,
+      "error": null
+    },
+    {
+      "model": "moving_average",
+      "fold": 0,
+      "is_holdout": true,
+      "uses_exogenous": false,
+      "wape": 41.7818,
+      "mae": 116680.9492,
+      "smape": 50.6589,
+      "error": null
+    },
+    {
+      "model": "naive",
+      "fold": 0,
+      "is_holdout": true,
+      "uses_exogenous": false,
+      "wape": 33.649,
+      "mae": 93969.1542,
+      "smape": 38.3461,
+      "error": null
+    },
+    {
+      "model": "seasonal_naive",
+      "fold": 0,
+      "is_holdout": true,
+      "uses_exogenous": false,
+      "wape": 14.8284,
+      "mae": 41410.2342,
+      "smape": 16.4609,
+      "error": null
+    },
+    {
+      "model": "seasonal_naive_drift",
+      "fold": 0,
+      "is_holdout": true,
+      "uses_exogenous": false,
+      "wape": 35.399,
+      "mae": 98856.0697,
+      "smape": 40.8711,
+      "error": null
+    }
+  ],
+  "cross_validation": [
+    {
+      "model": "combination_median",
+      "fold": 1,
+      "is_holdout": false,
+      "wape": 32.7296,
+      "smape": 41.1428,
+      "error": null
+    },
+    {
+      "model": "ets",
+      "fold": 1,
+      "is_holdout": false,
+      "wape": 32.7297,
+      "smape": 41.143,
+      "error": null
+    },
+    {
+      "model": "fourier",
+      "fold": 1,
+      "is_holdout": false,
+      "wape": 32.9427,
+      "smape": 49.4753,
+      "error": null
+    },
+    {
+      "model": "gbt_global",
+      "fold": 1,
+      "is_holdout": false,
+      "wape": 100,
+      "smape": 200,
+      "error": null
+    },
+    {
+      "model": "moving_average",
+      "fold": 1,
+      "is_holdout": false,
+      "wape": 34.0316,
+      "smape": 43.1702,
+      "error": null
+    },
+    {
+      "model": "naive",
+      "fold": 1,
+      "is_holdout": false,
+      "wape": 32.6605,
+      "smape": 41.0381,
+      "error": null
+    },
+    {
+      "model": "seasonal_naive",
+      "fold": 1,
+      "is_holdout": false,
+      "wape": 32.6605,
+      "smape": 41.0381,
+      "error": null
+    },
+    {
+      "model": "seasonal_naive_drift",
+      "fold": 1,
+      "is_holdout": false,
+      "wape": 32.6606,
+      "smape": 41.0388,
+      "error": null
+    },
+    {
+      "model": "combination_median",
+      "fold": 2,
+      "is_holdout": false,
+      "wape": 20.8541,
+      "smape": 23.9448,
+      "error": null
+    },
+    {
+      "model": "ets",
+      "fold": 2,
+      "is_holdout": false,
+      "wape": 100.042,
+      "smape": 200,
+      "error": null
+    },
+    {
+      "model": "fourier",
+      "fold": 2,
+      "is_holdout": false,
+      "wape": 21.3746,
+      "smape": 23.9781,
+      "error": null
+    },
+    {
+      "model": "gbt_global",
+      "fold": 2,
+      "is_holdout": false,
+      "wape": 18.0375,
+      "smape": 22.6761,
+      "error": null
+    },
+    {
+      "model": "moving_average",
+      "fold": 2,
+      "is_holdout": false,
+      "wape": 14.1555,
+      "smape": 13.8491,
+      "error": null
+    },
+    {
+      "model": "naive",
+      "fold": 2,
+      "is_holdout": false,
+      "wape": 100,
+      "smape": 200,
+      "error": null
+    },
+    {
+      "model": "seasonal_naive",
+      "fold": 2,
+      "is_holdout": false,
+      "wape": 15.1452,
+      "smape": 14.2589,
+      "error": null
+    },
+    {
+      "model": "seasonal_naive_drift",
+      "fold": 2,
+      "is_holdout": false,
+      "wape": 122.0559,
+      "smape": 200,
+      "error": null
+    },
+    {
+      "model": "combination_median",
+      "fold": 3,
+      "is_holdout": false,
+      "wape": 23.9113,
+      "smape": 24.6484,
+      "error": null
+    },
+    {
+      "model": "ets",
+      "fold": 3,
+      "is_holdout": false,
+      "wape": 23.5908,
+      "smape": 24.3055,
+      "error": null
+    },
+    {
+      "model": "fourier",
+      "fold": 3,
+      "is_holdout": false,
+      "wape": 23.1504,
+      "smape": 23.8794,
+      "error": null
+    },
+    {
+      "model": "gbt_global",
+      "fold": 3,
+      "is_holdout": false,
+      "wape": 26.5905,
+      "smape": 27.3798,
+      "error": null
+    },
+    {
+      "model": "moving_average",
+      "fold": 3,
+      "is_holdout": false,
+      "wape": 24.2957,
+      "smape": 25.0612,
+      "error": null
+    },
+    {
+      "model": "naive",
+      "fold": 3,
+      "is_holdout": false,
+      "wape": 23.6307,
+      "smape": 24.348,
+      "error": null
+    },
+    {
+      "model": "seasonal_naive",
+      "fold": 3,
+      "is_holdout": false,
+      "wape": 22.5534,
+      "smape": 23.1403,
+      "error": null
+    },
+    {
+      "model": "seasonal_naive_drift",
+      "fold": 3,
+      "is_holdout": false,
+      "wape": 25.9813,
+      "smape": 26.9592,
+      "error": null
+    },
+    {
+      "model": "combination_median",
+      "fold": 4,
+      "is_holdout": false,
+      "wape": 11.1635,
+      "smape": 11.3589,
+      "error": null
+    },
+    {
+      "model": "ets",
+      "fold": 4,
+      "is_holdout": false,
+      "wape": 17.0342,
+      "smape": 16.5023,
+      "error": null
+    },
+    {
+      "model": "fourier",
+      "fold": 4,
+      "is_holdout": false,
+      "wape": 17.4446,
+      "smape": 18.0608,
+      "error": null
+    },
+    {
+      "model": "gbt_global",
+      "fold": 4,
+      "is_holdout": false,
+      "wape": 24.1424,
+      "smape": 20.3577,
+      "error": null
+    },
+    {
+      "model": "moving_average",
+      "fold": 4,
+      "is_holdout": false,
+      "wape": 10.9487,
+      "smape": 11.161,
+      "error": null
+    },
+    {
+      "model": "naive",
+      "fold": 4,
+      "is_holdout": false,
+      "wape": 15.8448,
+      "smape": 15.4929,
+      "error": null
+    },
+    {
+      "model": "seasonal_naive",
+      "fold": 4,
+      "is_holdout": false,
+      "wape": 14.2049,
+      "smape": 14.677,
+      "error": null
+    },
+    {
+      "model": "seasonal_naive_drift",
+      "fold": 4,
+      "is_holdout": false,
+      "wape": 13.778,
+      "smape": 13.6891,
+      "error": null
+    }
+  ],
+  "significance": {
+    "alpha": 0.05,
+    "omnibus": {
+      "test": "Friedman (non-parametric repeated measures)",
+      "blocks": 4,
+      "models": 8,
+      "caveats": [
+        "With 4 blocks the chi-square approximation behind the p-value is approximate. Treat the result as indicative and report the number of blocks alongside it."
+      ],
+      "p_value": 0.258276423158856,
+      "available": true,
+      "grounding": "Procedure follows Aras, Deveci Kocako\u00e7 & Polat (2017), who used Friedman's test on each error measure and then Bonferroni-corrected multiple comparisons to locate the differences.",
+      "statistic": 8.922388059701488,
+      "mean_ranks": {
+        "ets": 5.25,
+        "naive": 4.125,
+        "fourier": 5,
+        "gbt_global": 6.75,
+        "moving_average": 3.75,
+        "seasonal_naive": 2.125,
+        "combination_median": 3.75,
+        "seasonal_naive_drift": 5.25
+      },
+      "blocks_dropped": 0,
+      "interpretation": "No detectable difference between the models on this measure. With this many blocks that is as likely to mean too little evidence as genuine equivalence.",
+      "best_by_mean_rank": "seasonal_naive",
+      "reject_null_at_05": false
+    },
+    "summary": "Friedman's test does not reject the null (p = 0.258) across 4 blocks, so the differences between these 8 models are not distinguishable from noise. 'seasonal_naive' has the best mean rank, but that ranking should not be presented as a finding.",
+    "correction": "Bonferroni",
+    "comparisons": 28,
+    "significant_pairs": 0
+  },
+  "intervals": {
+    "level": 0.8,
+    "lower": [
+      124656.26400000002,
+      124656.26400000002,
+      124656.26400000002,
+      124656.26400000002,
+      124656.26400000002,
+      124656.26400000002,
+      124656.26400000002,
+      124656.26400000002,
+      124656.26400000002,
+      124656.26400000002,
+      124656.26400000002,
+      124656.26400000002
+    ],
+    "model": "moving_average",
+    "notes": [
+      "Horizon steps [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] had fewer than 5 backtest errors of their own, so their intervals use the pooled error distribution across all steps. They are wider at short horizons than the data strictly implies."
+    ],
+    "point": [
+      162581.765,
+      162581.765,
+      162581.765,
+      162581.765,
+      162581.765,
+      162581.765,
+      162581.765,
+      162581.765,
+      162581.765,
+      162581.765,
+      162581.765,
+      162581.765
+    ],
+    "upper": [
+      233291.54750000002,
+      233291.54750000002,
+      233291.54750000002,
+      233291.54750000002,
+      233291.54750000002,
+      233291.54750000002,
+      233291.54750000002,
+      233291.54750000002,
+      233291.54750000002,
+      233291.54750000002,
+      233291.54750000002,
+      233291.54750000002
+    ],
+    "actual": [
+      222269.79,
+      319745.94,
+      202358.81999999998,
+      300307.48000000004,
+      204251.49,
+      259053.85000000003,
+      234202.83000000002,
+      288361.13,
+      350123.39999999997,
+      369129.47,
+      295233.31,
+      306115.06
+    ],
+    "method": "empirical quantiles of backtest errors, by horizon step",
+    "coverage": {
+      "caveat": "Observed coverage is itself estimated from 12 points, so it carries its own uncertainty; do not read a gap of a few percentage points as a finding.",
+      "points": 12,
+      "nominal": 0.8,
+      "verdict": "too narrow - the interval understates the uncertainty",
+      "observed": 0.25,
+      "available": true,
+      "mean_width": 108635.28349999998
+    },
+    "available": true,
+    "sizing_note": "Sized on cross-validation errors and checked against the hold-out. Sizing on the hold-out itself would guarantee good coverage and demonstrate nothing."
+  },
+  "selection": {
+    "selected_model": "moving_average",
+    "holdout_scored_at": "2026-10-27T09:15:37.397813+00:00",
+    "warning": null,
+    "note": "The selected model was chosen on the cross-validation folds and written down before the hold-out was scored."
+  }
+}
