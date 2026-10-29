@@ -9,6 +9,7 @@ import {
   adaptField,
   cacheNote,
   dominantBinShare,
+  edgeText,
 } from '../components/baskets/adaptBaskets.js';
 import { useApi } from '../hooks/useApi.js';
 import { getBasketSizes } from '../services/analytics.js';
@@ -225,7 +226,7 @@ function ShapeCard({ field, loading, error }) {
     ['IQR', exact(s.iqr, money)],
     ['Skewness', s.skewness?.toFixed(2) ?? '—'],
     ['Excess kurtosis', s.kurtosis_excess?.toFixed(1) ?? '—'],
-    ['Range', `${exact(s.min, money)} to ${exact(s.max, money)}`],
+    ['Range', `${edgeText(s.min, field.currency)} to ${edgeText(s.max, field.currency)}`],
   ];
 
   const wanted = [25, 50, 75, 90, 95, 99];
