@@ -6,14 +6,6 @@
  */
 export const PLANNED_PAGES = [
   {
-    path: 'explore',
-    label: 'Explore',
-    phase: 'Phase 4',
-    capability: 'sales_analytics',
-    summary: 'Exploratory analysis: distributions, daily/weekly/monthly trends, seasonality, breakdowns and relationships between variables.',
-    endpoints: ['GET /analytics/distributions', 'GET /analytics/seasonality', 'GET /analytics/relationships'],
-  },
-  {
     path: 'statistics',
     label: 'Statistics & features',
     phase: 'Phase 4',
