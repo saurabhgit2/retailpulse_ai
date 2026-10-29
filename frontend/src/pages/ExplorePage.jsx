@@ -300,6 +300,13 @@ function RevenueShape({ revenue, loading, error }) {
     ['Range', `${exact(s.min, { ...money, decimals: 2 })} to ${compact(s.max, money)}`],
   ];
 
+  // Six percentiles, not the nine the endpoint returns. Nine currency values
+  // in a third of the page width run into each other with no gap, and a row
+  // reading "£0.65£1.25£1.70" is worse than not showing the 1st, 5th and
+  // 10th at all. They remain in the response for anyone who needs them.
+  const wanted = [25, 50, 75, 90, 95, 99];
+  const quantiles = revenue.percentiles.filter((p) => wanted.includes(p.p));
+
   return (
     <ChartFrame
       title="Revenue per line: shape and spread"
@@ -329,7 +336,7 @@ function RevenueShape({ revenue, loading, error }) {
         <caption className="pb-1 text-left text-muted">Percentiles</caption>
         <thead>
           <tr className="border-b border-rule">
-            {revenue.percentiles.map((p) => (
+            {quantiles.map((p) => (
               <th key={p.key} scope="col" className="py-1 text-right font-medium text-muted">
                 {p.p}
               </th>
@@ -338,7 +345,7 @@ function RevenueShape({ revenue, loading, error }) {
         </thead>
         <tbody>
           <tr>
-            {revenue.percentiles.map((p) => (
+            {quantiles.map((p) => (
               <td key={p.key} className="py-1 text-right text-ink2 tabular-nums">
                 {exact(p.value, { currency: '£', decimals: 2 })}
               </td>
