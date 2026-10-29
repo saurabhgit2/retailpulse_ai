@@ -21,14 +21,7 @@ export const PLANNED_PAGES = [
     summary: 'Descriptive statistics with method explanations, entropy and mutual information, and model-based feature importance compared side by side.',
     endpoints: ['GET /analytics/statistics', 'GET /analytics/features', 'GET /analytics/series-profile'],
   },
-  {
-    path: 'baskets',
-    label: 'Baskets',
-    phase: 'Phase 5b',
-    capability: 'association_rules',
-    summary: 'Association rules ranked by actionability rather than frequency, with the size of the rule set after each filter (RQ3).',
-    endpoints: ['POST /association-runs', 'GET /association-runs/{run_id}/rules'],
-  },
+
   {
     path: 'insights',
     label: 'Insights',

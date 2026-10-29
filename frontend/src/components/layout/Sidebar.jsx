@@ -18,6 +18,7 @@ const BUILT_PAGES = [
   { path: 'dashboard', label: 'Dashboard', capability: 'sales_analytics' },
   { path: 'forecasting', label: 'Forecasting', capability: 'demand_forecasting' },
   { path: 'customers', label: 'Customers', capability: 'segmentation' },
+  { path: 'baskets', label: 'Baskets', capability: 'sales_analytics' },
 ];
 function NavSection({ title, children }) {
   return (
