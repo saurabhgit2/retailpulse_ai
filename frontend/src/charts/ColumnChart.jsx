@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { axisFormatter, compact, exact, thinLabels } from './axisFormat.js';
+import { axisFormatter, compact, exact, labelAnchor, thinLabels } from './axisFormat.js';
 import { barPath } from './path.js';
 import { bandScale, linearScale, niceDomain, niceTicks } from './scale.js';
 import { useChartSize } from './useChartSize.js';
@@ -109,6 +109,12 @@ export function ColumnChart({
             const value = Number(bin.value);
             const top = Number.isFinite(value) ? y(value) : y(0);
             const on = active === id;
+            const tick = labelled.has(i) ? formatBin(bin) : null;
+            // The end labels are pulled inside the plot rather than centred
+            // on their bar, because a label centred on the last bar is
+            // clipped by the viewport and a clipped number still reads as a
+            // number.
+            const anchor = tick === null ? null : labelAnchor(tick, left + x.bandwidth() / 2, plotWidth);
             return (
               <g
                 key={id}
@@ -140,18 +146,18 @@ export function ColumnChart({
                   fill={color}
                   fillOpacity={on ? 1 : 0.9}
                 />
-                {labelled.has(i) && (
+                {anchor ? (
                   <text
                     className="chart-tick"
-                    x={left + x.bandwidth() / 2}
+                    x={anchor.x}
                     y={plotHeight + 14}
-                    textAnchor="middle"
+                    textAnchor={anchor.anchor}
                     fontSize="9.5"
                     fill="var(--chart-ink-muted)"
                   >
-                    {formatBin(bin)}
+                    {tick}
                   </text>
-                )}
+                ) : null}
               </g>
             );
           })}
@@ -167,12 +173,19 @@ export function ColumnChart({
                 strokeWidth="1.5"
                 strokeDasharray="5 4"
               />
+              {/* A halo in the surface colour, so the label stays legible
+                  where a tall bar runs up behind it. Drawing it over a bar
+                  without this makes it unreadable exactly where the
+                  comparison matters most. */}
               <text
                 x={plotWidth}
                 y={y(reference.value) - 4}
                 textAnchor="end"
                 fontSize="10"
                 fill="var(--chart-ink-2)"
+                stroke="var(--chart-surface)"
+                strokeWidth="3"
+                paintOrder="stroke"
               >
                 {reference.label}
               </text>

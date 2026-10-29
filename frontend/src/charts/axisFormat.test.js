@@ -5,6 +5,7 @@ import {
   axisUnit,
   compact,
   dateTick,
+  labelAnchor,
   pickDateTicks,
   thinLabels,
 } from './axisFormat.js';
@@ -128,5 +129,30 @@ describe('thinLabels', () => {
   it('survives a zero count and a zero width', () => {
     expect(thinLabels(0, 500)).toEqual([]);
     expect(thinLabels(5, 0, 46)).toEqual([0, 4]);
+  });
+});
+
+describe('labelAnchor', () => {
+  it('centres a label that fits', () => {
+    expect(labelAnchor('100', 300, 600)).toEqual({ anchor: 'middle', x: 300 });
+  });
+
+  it('pulls the last label inside the plot instead of letting it clip', () => {
+    // "£119,626" centred on the final bar overflowed the viewport and
+    // rendered as "£119,62" - a number that looks complete and is wrong by a
+    // factor of ten.
+    const a = labelAnchor('£119,626', 598, 600);
+    expect(a.anchor).toBe('end');
+    expect(a.x).toBe(600);
+  });
+
+  it('pulls the first label inside the plot too', () => {
+    const a = labelAnchor('£0.06', 2, 600);
+    expect(a.anchor).toBe('start');
+    expect(a.x).toBe(0);
+  });
+
+  it('treats an absent label as empty rather than throwing', () => {
+    expect(labelAnchor(null, 300, 600).anchor).toBe('middle');
   });
 });

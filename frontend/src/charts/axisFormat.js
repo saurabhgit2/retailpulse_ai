@@ -136,6 +136,27 @@ export function pickDateTicks(values, width, minSpacing = 64) {
 }
 
 /**
+ * Where to anchor a tick label so it stays inside the plot.
+ *
+ * A label centred under the last bar runs off the right-hand edge and is
+ * clipped by the SVG viewport, which is worse than it sounds: "£119,626"
+ * renders as "£119,62", a number that looks complete and is wrong by a
+ * factor of ten. The first label can do the same thing on the left.
+ *
+ * Width is estimated from the character count rather than measured. Measuring
+ * means `getComputedTextLength`, which forces a layout on every label on
+ * every render; the estimate only has to be good enough to decide which of
+ * three anchors to use, and the digits these axes carry are near enough
+ * fixed-width to make it reliable.
+ */
+export function labelAnchor(text, centre, width, perChar = 5.3) {
+  const half = (String(text ?? '').length * perChar) / 2;
+  if (centre - half < 0) return { anchor: 'start', x: 0 };
+  if (centre + half > width) return { anchor: 'end', x: width };
+  return { anchor: 'middle', x: centre };
+}
+
+/**
  * Which of `count` evenly spaced labels to draw in `width` pixels.
  *
  * Shared by the date axis and the column axis, because both got the same
