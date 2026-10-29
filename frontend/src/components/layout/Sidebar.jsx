@@ -20,6 +20,7 @@ const BUILT_PAGES = [
   { path: 'customers', label: 'Customers', capability: 'segmentation' },
   { path: 'baskets', label: 'Baskets', capability: 'sales_analytics' },
   { path: 'explore', label: 'Explore', capability: 'sales_analytics' },
+  { path: 'statistics', label: 'Statistics & features', capability: 'sales_analytics' },
 ];
 function NavSection({ title, children }) {
   return (

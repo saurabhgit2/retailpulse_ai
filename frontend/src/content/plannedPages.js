@@ -6,15 +6,6 @@
  */
 export const PLANNED_PAGES = [
   {
-    path: 'statistics',
-    label: 'Statistics & features',
-    phase: 'Phase 4',
-    capability: 'sales_analytics',
-    summary: 'Descriptive statistics with method explanations, entropy and mutual information, and model-based feature importance compared side by side.',
-    endpoints: ['GET /analytics/statistics', 'GET /analytics/features', 'GET /analytics/series-profile'],
-  },
-
-  {
     path: 'insights',
     label: 'Insights',
     phase: 'Phase 6',
