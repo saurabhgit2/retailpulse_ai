@@ -195,6 +195,10 @@ def score_features(
         "rank_agreement": agreement,
         "model_importance": None,
         "limitations": [
+            "gross_revenue is the product of quantity and unit price, so "
+            "against a quantity target it is partly derived from the target "
+            "itself; its mutual information is inflated and it is reported "
+            "for completeness rather than as a candidate predictor.",
             "Mutual information is biased towards high-cardinality features; "
             "identifier-like columns are excluded for that reason.",
             "Discretised MI depends on the number of bins, which is why three "
