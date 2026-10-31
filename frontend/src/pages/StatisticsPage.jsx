@@ -7,13 +7,15 @@ import {
   adaptDescriptive,
   adaptFeatures,
   adaptNormality,
+  adaptSeriesProfile,
   adaptStationarity,
   binRange,
   cacheNote,
+  dominantClass,
   rankDisagreements,
 } from '../components/statistics/adaptStatistics.js';
 import { useApi } from '../hooks/useApi.js';
-import { getFeatures, getStatistics } from '../services/analytics.js';
+import { getFeatures, getSeriesProfile, getStatistics } from '../services/analytics.js';
 
 /**
  * Statistics and features.
@@ -35,9 +37,14 @@ export function StatisticsPage() {
     [datasetId],
   );
   const loadFeatures = useCallback((signal) => getFeatures(datasetId, { signal }), [datasetId]);
+  const loadProfile = useCallback(
+    (signal) => getSeriesProfile(datasetId, { signal }),
+    [datasetId],
+  );
 
   const statistics = useApi(loadStatistics);
   const featuresApi = useApi(loadFeatures);
+  const profileApi = useApi(loadProfile);
 
   const descriptive = useMemo(() => adaptDescriptive(statistics.data), [statistics.data]);
   const normality = useMemo(() => adaptNormality(statistics.data), [statistics.data]);
@@ -49,8 +56,12 @@ export function StatisticsPage() {
     [features],
   );
 
+  const profile = useMemo(() => adaptSeriesProfile(profileApi.data), [profileApi.data]);
+  const dominant = useMemo(() => dominantClass(profile), [profile]);
+
   const statsLoading = statistics.loading && !statistics.data;
   const featuresLoading = featuresApi.loading && !featuresApi.data;
+  const profileLoading = profileApi.loading && !profileApi.data;
   const currency = descriptive.value === 'order_value' ? '£' : null;
   const money = currency ? { currency } : undefined;
 
@@ -192,6 +203,70 @@ export function StatisticsPage() {
               ) : null}
             </div>
           </div>
+        </ChartFrame>
+
+        <div className="lg:col-span-2">
+          <ChartFrame
+            title="Demand series by intermittency class"
+            subtitle={profileSubtitle(profile)}
+            loading={profileLoading}
+            error={profileApi.error}
+            empty={!profile.available}
+            emptyMessage="This dataset has no series long enough to profile."
+            note={profileNote(profile, dominant)}
+            table={{
+              caption: 'Intermittency classes',
+              columns: [
+                { key: 'label', label: 'Class' },
+                { key: 'description', label: 'Meaning' },
+                { key: 'value', label: 'Series', numeric: true },
+                { key: 'share', label: 'Share', numeric: true },
+              ],
+              rows: (profile.bins ?? []).map((b) => ({
+                key: b.key,
+                label: b.label,
+                description: b.description,
+                value: exact(b.value),
+                share: profile.counted ? percent(b.value / profile.counted) : '—',
+              })),
+            }}
+          >
+            <ColumnChart
+              bins={profile.bins ?? []}
+              color="var(--series-3)"
+              valueLabel="Series"
+              height={220}
+            />
+          </ChartFrame>
+        </div>
+
+        <ChartFrame
+          title="How forecastable are these series?"
+          subtitle="The characteristics RQ1 asks about."
+          loading={profileLoading}
+          error={profileApi.error}
+          empty={!profile.available}
+          height={220}
+          note={profile.note}
+        >
+          <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 py-1 text-xs">
+            {[
+              ['Median spectral entropy', profile.summary?.medianSpectralEntropy?.toFixed(3) ?? '—'],
+              ['Median weeks of history', exact(profile.summary?.medianPeriods)],
+              ['Median zero-demand share', percent(profile.summary?.medianZeroShare)],
+              ['Median ADI', profile.summary?.medianAdi?.toFixed(3) ?? '—'],
+              ['Median CV²', profile.summary?.medianCvSquared?.toFixed(3) ?? '—'],
+              [
+                'Class boundaries',
+                `ADI ${profile.boundaries?.adi ?? '—'} · CV² ${profile.boundaries?.cvSquared ?? '—'}`,
+              ],
+            ].map(([label, text]) => (
+              <div key={label} className="contents">
+                <dt className="text-muted">{label}</dt>
+                <dd className="text-right text-ink2 tabular-nums">{text}</dd>
+              </div>
+            ))}
+          </dl>
         </ChartFrame>
 
         <div className="lg:col-span-2">
@@ -431,6 +506,56 @@ function comparisonNote(comparison, currency) {
     parts.push(
       `${comparison.excludedSmallGroups.length} group(s) were excluded for having too few observations.`,
     );
+  }
+  return parts.join(' ');
+}
+
+function profileSubtitle(profile) {
+  if (!profile.available) return null;
+  const parts = [`${exact(profile.seriesCount)} product series`];
+  if (profile.seriesExcluded) {
+    parts.push(
+      `${exact(profile.seriesExcluded)} excluded for having fewer than ${exact(
+        profile.minPeriods,
+      )} weeks`,
+    );
+  }
+  return `${parts.join(' · ')}.`;
+}
+
+function profileNote(profile, dominant) {
+  if (!profile.available) return null;
+  const parts = [];
+  if (dominant) {
+    parts.push(
+      `${dominant.label} is the largest class at ${percent(dominant.share)} of profiled series.`,
+    );
+  }
+  const empty = profile.bins.filter((b) => b.value === 0);
+  if (empty.length) {
+    // The quadrant scheme is exhaustive, so an empty class is a statement
+    // about the catalogue rather than a missing bar.
+    parts.push(
+      `No series falls in the ${empty
+        .map((b) => b.label.toLowerCase())
+        .join(' or ')} ${empty.length === 1 ? 'quadrant' : 'quadrants'}, which the scheme allows for and this catalogue does not contain.`,
+    );
+  }
+  const entropy = profile.summary?.medianSpectralEntropy;
+  if (entropy !== null && entropy !== undefined) {
+    parts.push(
+      `Median spectral entropy is ${entropy.toFixed(
+        3,
+      )}, and on the scale the endpoint describes below that is close to the noise end.`,
+    );
+  }
+  if (profile.unaccounted) {
+    parts.push(
+      `${exact(profile.unaccounted)} profiled series are not accounted for by these classes.`,
+    );
+  }
+  if (profile.unknown.length) {
+    parts.push(`Unrecognised classes returned: ${profile.unknown.join(', ')}.`);
   }
   return parts.join(' ');
 }
