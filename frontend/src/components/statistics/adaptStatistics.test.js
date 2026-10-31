@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import featuresFixture from './features.fixture.json';
+import seriesProfileFixture from './seriesProfile.fixture.json';
 import statisticsFixture from './statistics.fixture.json';
 import {
   adaptComparison,
   adaptDescriptive,
   adaptFeatures,
   adaptNormality,
+  adaptSeriesProfile,
   adaptStationarity,
   adaptTest,
   binRange,
+  dominantClass,
   fieldLabel,
   rankDisagreements,
 } from './adaptStatistics.js';
@@ -191,5 +194,68 @@ describe('binRange', () => {
 
   it('is null when no bin breakdown is reported', () => {
     expect(binRange({})).toBeNull();
+  });
+});
+
+describe('adaptSeriesProfile', () => {
+  /**
+   * The fixture is the real response with its 297-row `series` array trimmed
+   * to a single real row; every other field is untouched.
+   */
+
+  it('reads the counts and the boundaries that define the classes', () => {
+    const p = adaptSeriesProfile(seriesProfileFixture);
+    expect(p.available).toBe(true);
+    expect(p.seriesCount).toBe(297);
+    expect(p.seriesExcluded).toBe(3);
+    expect(p.minPeriods).toBe(26);
+    expect(p.boundaries).toEqual({ adi: 1.32, cvSquared: 0.49 });
+  });
+
+  it('shows a quadrant with no series as an empty bar, not a missing one', () => {
+    // Syntetos-Boylan is exhaustive: four quadrants, every series in exactly
+    // one. Nothing in this catalogue is intermittent, and that is a finding.
+    const p = adaptSeriesProfile(seriesProfileFixture);
+    expect(p.bins.map((b) => b.key)).toEqual(['smooth', 'erratic', 'intermittent', 'lumpy']);
+    expect(p.bins.find((b) => b.key === 'intermittent').value).toBe(0);
+    expect(p.bins.find((b) => b.key === 'erratic').value).toBe(208);
+  });
+
+  it('checks that the classes account for every profiled series', () => {
+    const p = adaptSeriesProfile(seriesProfileFixture);
+    expect(p.counted).toBe(297);
+    expect(p.unaccounted).toBe(0);
+  });
+
+  it('reports a class it does not recognise rather than dropping it', () => {
+    const p = adaptSeriesProfile({
+      series_count: 3,
+      classes: { smooth: 2, sporadic: 1 },
+    });
+    expect(p.unknown).toEqual(['sporadic']);
+    expect(p.unaccounted).toBe(1);
+  });
+
+  it('reports unavailability rather than throwing', () => {
+    expect(adaptSeriesProfile({}).available).toBe(false);
+    expect(adaptSeriesProfile(undefined).available).toBe(false);
+  });
+
+  it('carries the median spectral entropy, which is what RQ1 turns on', () => {
+    const p = adaptSeriesProfile(seriesProfileFixture);
+    expect(p.summary.medianSpectralEntropy).toBeCloseTo(0.866, 3);
+    expect(p.note).toContain('close to white noise');
+  });
+});
+
+describe('dominantClass', () => {
+  it('names the largest class with its share', () => {
+    const d = dominantClass(adaptSeriesProfile(seriesProfileFixture));
+    expect(d.key).toBe('erratic');
+    expect(d.share).toBeCloseTo(208 / 297, 6);
+  });
+
+  it('is null when nothing was profiled', () => {
+    expect(dominantClass({ available: false })).toBeNull();
   });
 });

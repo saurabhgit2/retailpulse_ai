@@ -250,6 +250,83 @@ export function binRange(feature) {
   return { low: Math.min(...values), high: Math.max(...values), spread: Math.max(...values) - Math.min(...values) };
 }
 
+/**
+ * The Syntetos–Boylan quadrants, in quadrant order.
+ *
+ * The scheme is exhaustive: every series falls in exactly one of the four,
+ * decided by whether its average demand interval and squared coefficient of
+ * variation sit above or below the two boundaries. So a class the endpoint
+ * does not return is a class with no series in it, and showing it as an empty
+ * bar is a finding rather than a gap — on this dataset nothing at all is
+ * intermittent, which is worth being able to see.
+ */
+export const INTERMITTENCY_CLASSES = [
+  { key: 'smooth', label: 'Smooth', description: 'Regular demand, steady size' },
+  { key: 'erratic', label: 'Erratic', description: 'Regular demand, variable size' },
+  { key: 'intermittent', label: 'Intermittent', description: 'Gappy demand, steady size' },
+  { key: 'lumpy', label: 'Lumpy', description: 'Gappy demand, variable size' },
+];
+
+/**
+ * The demand-series profile.
+ *
+ * This is the half of RQ1 that asks what characteristics of the data explain
+ * the differences between models, so the figures that answer it — the class
+ * counts, the two boundaries that define them, and the median spectral
+ * entropy — are kept together rather than scattered.
+ *
+ * A class the endpoint returns that is not one of the four canonical
+ * quadrants is reported in `unknown` rather than dropped, so a change in the
+ * backend's classification surfaces here instead of silently disappearing.
+ */
+export function adaptSeriesProfile(payload) {
+  const d = payload ?? {};
+  const classes = d.classes ?? {};
+  if (!d.series_count && !Object.keys(classes).length) return { available: false };
+
+  const canonical = new Set(INTERMITTENCY_CLASSES.map((c) => c.key));
+  const bins = INTERMITTENCY_CLASSES.map((c) => ({
+    key: c.key,
+    label: c.label,
+    description: c.description,
+    value: num(classes[c.key]) ?? 0,
+  }));
+  const counted = bins.reduce((sum, b) => sum + b.value, 0);
+  const s = d.summary ?? {};
+  const b = d.class_boundaries ?? {};
+
+  return {
+    available: true,
+    minPeriods: num(d.min_periods),
+    seriesCount: num(d.series_count),
+    seriesExcluded: num(d.series_excluded),
+    topProductsAnalysed: num(d.top_products_analysed),
+    bins,
+    counted,
+    // Every profiled series should land in exactly one quadrant. If it does
+    // not, the page says so rather than presenting a chart that silently
+    // omits series.
+    unaccounted: num(d.series_count) === null ? null : num(d.series_count) - counted,
+    unknown: Object.keys(classes).filter((k) => !canonical.has(k)),
+    boundaries: { adi: num(b.adi), cvSquared: num(b.cv_squared) },
+    summary: {
+      medianPeriods: num(s.median_periods),
+      medianZeroShare: num(s.median_zero_share),
+      medianAdi: num(s.median_adi),
+      medianCvSquared: num(s.median_cv_squared),
+      medianSpectralEntropy: num(s.median_spectral_entropy),
+    },
+    note: d.note ?? null,
+  };
+}
+
+/** The quadrant holding the most series, with its share. */
+export function dominantClass(profile) {
+  if (!profile?.available || !profile.counted) return null;
+  const top = profile.bins.reduce((a, b) => (b.value > a.value ? b : a));
+  return { ...top, share: top.value / profile.counted };
+}
+
 /** The per-line distribution block, when this endpoint carries one. */
 export function adaptStatisticsDistribution(payload, { currency = null } = {}) {
   return distributionShape(payload?.distribution, { currency });
