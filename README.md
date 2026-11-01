@@ -1,81 +1,126 @@
-# RetailPulse AI — frontend
+# RetailPulse AI
 
-React single-page app for RetailPulse AI: sign-in, dataset upload with column mapping, background
-processing, and the data-quality report. Analytics, forecasting and AI pages are placeholders that
-arrive in later phases (see `src/content/plannedPages.js`).
+An integrated decision-support platform for retail analytics. It takes one public
+transactional dataset and runs demand forecasting, RFM-based customer segmentation and
+association-rule mining over a **single shared data foundation**, then reconciles the three
+into ranked recommendations with their evidence attached.
 
-The architecture is in `docs/ARCHITECTURE.md`. A walkthrough of every part of this folder, written
-for learning, is in `docs/FRONTEND_GUIDE.md`.
+MSE907 Industry-based Capstone Research Project · Master of Software Engineering ·
+Yoobee College of Creative Innovation. Saurabh Singh (270732411), supervised by
+Dr. Haider Ali.
 
-## Requirements
+## Why it exists
 
-- Node.js **20.19+ or 22.12+** (required by Vite 7). Check with `node --version`.
-- npm (comes with Node).
+Forecasting, segmentation and market-basket analysis are each mature, and each is
+evaluated in isolation — on different datasets, at different granularities, with metrics
+that cannot be compared. Aras et al. (2017) note in their own limitations that the
+decision-support platform their methods needed was never built. Alves Gomes and Meisen
+(2023) reviewed 105 segmentation studies and could not name a best method, because
+evaluation practice is too inconsistent to rank them.
 
-## Run it
+This project builds the thing those papers describe as missing, and measures whether
+integrating the three analyses beats using them separately.
+
+## What is in the repository
+
+| | |
+|---|---|
+| `backend/` | FastAPI service: accounts, upload, cleaning pipeline, and six analytical packages |
+| `frontend/` | React single-page application: seven analysis pages |
+| `research/` | Experiment runners and their recorded results, one directory per run |
+| `docs/` | Architecture, backend and frontend guides, local setup |
+| `data/sample/` | Synthetic data for development. Clearly labelled; never a result |
+
+Roughly 160 Python modules and 140 JavaScript modules. **637 backend tests and 280
+frontend tests** across 26 files.
+
+The analytical packages — `preprocessing`, `analytics`, `forecasting`, `segmentation`,
+`association`, `insights` — import no web framework, no ORM and no database session. An
+automated test walks every file in them and fails the build if one does. That rule is
+what lets the research scripts and the API share the same code, which is why the
+dashboard and the dissertation cannot disagree about a number.
+
+## Quick start
+
+Three processes: PostgreSQL in Docker, the API, and the dev server. Full instructions,
+including the problems you are likely to hit, are in
+[`docs/RUNNING_LOCALLY.md`](docs/RUNNING_LOCALLY.md).
+
+```bash
+docker compose up -d db                     # PostgreSQL 16
+
+cd backend
+python -m venv .venv && . .venv/bin/activate   # Windows: .\.venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
+cp .env.example .env                        # then set JWT_SECRET_KEY
+alembic upgrade head
+uvicorn app.main:app --reload               # http://localhost:8000/docs
+```
 
 ```bash
 cd frontend
-npm install              # downloads dependencies into node_modules/
-cp .env.example .env     # Windows PowerShell: Copy-Item .env.example .env
-npm run dev              # starts Vite on http://localhost:5173
+npm install
+cp .env.example .env
+npm run dev                                 # http://localhost:5173
 ```
 
-Open http://localhost:5173, create an account, then choose **Upload data → Use a synthetic sample
-file** to try the whole flow.
+Create an account, then **Upload data**. For the real dataset, download Online Retail II
+from Kaggle and upload the `.xlsx` unchanged — both year sheets are read and stacked.
 
-### Mock mode vs the real backend
+## The dashboard
 
-| `VITE_USE_MOCK_API` | What happens |
+Seven pages, each reading only analyses the API exposes:
+
+- **Data quality** — what the twelve-step cleaning pipeline did, and what it withheld
+- **Dashboard** — headline figures with URL-synced date and region filters
+- **Explore** — calendar seasonality, the weekly trend, revenue-per-line distribution
+- **Forecasting** — start a run, poll it, compare models on a locked hold-out
+- **Customers** — RFM segments, concentration, value and recency distributions
+- **Baskets** — basket size and order value, on linear or logarithmic axes
+- **Statistics & features** — descriptive statistics, group comparison with its test,
+  mutual information, and the demand-series forecastability profile
+- **Insights** — explains where the insight layer lives and why it is not a page here
+
+Charts are hand-written SVG rather than a charting library. Every other analytical
+component in this project is implemented from its definition so the report can explain
+it, and the chart layer follows the same rule: scales and path generation are about 200
+lines. The cost, stated in the limitations, is no zoom, no brush selection and no
+animated transitions.
+
+## Reproducing the research
+
+Each research question has a runner and a configuration file, and each run writes a
+timestamped directory holding its configuration, the SHA-256 digest of that
+configuration, the library versions and the outputs. See
+[`research/README.md`](research/README.md).
+
+## What is deliberately not here
+
+- **No generative language model.** "AI" here means machine learning and statistical
+  pattern discovery: gradient-boosted trees, three unsupervised clustering families,
+  association-rule mining, and information-theoretic feature analysis. A conversational
+  assistant was specified in Assessment 1 and withdrawn in Assessment 2.
+- **No segmentation, association or recommendation API endpoints.** Those engines run as
+  reproducible research pipelines. The dashboard presents what the API exposes; the
+  decision and its limitation are recorded in Assessment 2.
+- **No LSTM.** Assessment 1 §9.5 permitted dropping it, and it was dropped. The
+  forecasting comparison stands on statistical, tree-based and combination approaches.
+
+## Dataset
+
+Online Retail II (UCI, via Kaggle) — a public set of invoices from a UK online retailer
+covering about two years. Public, transaction-level, and able to support all three
+analyses from one source, which is what the shared-foundation requirement needs.
+
+It is **not** committed to this repository. `data/raw/` and `data/uploads/` are ignored.
+
+## Documentation
+
+| Document | What it covers |
 |---|---|
-| `true` (default) | An in-browser mock (`src/services/mock/`) answers every API call. No backend needed. Accounts and dataset metadata are kept in this browser's localStorage. Reports are computed from the first ~5,000 rows of your file and are labelled **Mock**. |
-| `false` | Requests go to `/api/v1/...`. The Vite dev server forwards them to `DEV_API_TARGET` (default `http://localhost:8000`), where the FastAPI backend runs. |
-
-Nothing else in the app changes between the two modes: the mock returns real `Response` objects
-with the same status codes and error format as the backend contract (architecture §9).
-
-To clear the mock's data, run `localStorage.removeItem('retailpulse.mock.v1')` in the browser
-console, or clear the site data.
-
-## Scripts
-
-| Command | Does |
-|---|---|
-| `npm run dev` | Development server with hot reload |
-| `npm run build` | Production build into `dist/` |
-| `npm run preview` | Serve the production build locally |
-| `npm test` | Vitest in watch mode |
-| `npm run test:run` | Run all tests once (use this in CI) |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier |
-
-## Folder map
-
-```
-src/
-├── main.jsx            entry point: React root, StrictMode, router
-├── App.jsx             app-wide providers + routes
-├── routes.jsx          every URL and the page it shows
-├── index.css           Tailwind import, colour tokens (light + dark)
-├── pages/              one component per screen
-├── components/
-│   ├── layout/         AppShell, Sidebar, TopBar, DatasetSwitcher, AuthLayout, PageHeader…
-│   ├── ui/             Button, Card, Alert, Badge, TextField, Spinner, StatusPill…
-│   ├── upload/         the upload wizard steps, mapping table, quality report
-│   ├── explain/        MethodCard ("About this analysis")
-│   └── auth/           ProtectedRoute, PublicOnlyRoute
-├── charts/             Recharts components (Phase 4)
-├── services/           the only code that talks HTTP (+ mock/ for mock mode)
-├── hooks/              useApi, usePolling, useAuth, useDatasets
-├── context/            AuthProvider, DatasetProvider (+ context objects)
-├── content/            explanation text and the list of planned pages
-├── utils/              pure helpers: formatting, CSV, dates, capabilities, validation
-└── test/setup.js       test environment setup
-```
-
-Tests sit next to the code they test (`*.test.js` / `*.test.jsx`).
-
-## Environment variables
-
-Only variables prefixed `VITE_` reach the browser, and anyone can read them in the bundled
-JavaScript. **Never put secrets in them.** See `.env.example` for the full list.
+| [`docs/RUNNING_LOCALLY.md`](docs/RUNNING_LOCALLY.md) | Setup, daily start-up, and what goes wrong |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Design, layering, API contract, data model |
+| [`docs/BACKEND_GUIDE.md`](docs/BACKEND_GUIDE.md) | Walkthrough of `backend/`, written to be rebuilt from |
+| [`docs/FRONTEND_GUIDE.md`](docs/FRONTEND_GUIDE.md) | Walkthrough of `frontend/` |
+| [`research/README.md`](research/README.md) | Reproducing each research result |
+| [`Folder_Structure.md`](Folder_Structure.md) | The tree, annotated |
