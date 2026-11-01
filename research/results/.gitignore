@@ -1,2 +1,14 @@
-*
-!.gitignore
+# Run outputs are the research record and are committed. The whole folder is
+# about 2 MB, and a result that is not in version control cannot be cited.
+#
+# This file previously contained "*", which silently excluded every new run.
+# The primary RQ1 run went missing that way and was only found when the
+# repository was checked against Assessment 2's claim of seven directories.
+# Files already tracked kept being tracked, so nothing looked wrong.
+#
+# Guard against genuinely large binary artefacts only.
+*.pkl
+*.joblib
+*.parquet
+*.h5
+*.pt
