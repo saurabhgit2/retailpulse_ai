@@ -6,7 +6,20 @@
 | **Author** | Saurabh Singh (270732411) · Supervisor: Dr. Haider Ali |
 | **Document** | Phase 1 architecture and design (becomes `docs/ARCHITECTURE.md` in the repo) |
 | **Version** | 0.1 — proposed, 11 September 2026 |
-| **Status** | **Awaiting review.** No implementation code will be written until you say **BUILD PHASE 1**. |
+| **Status** | Pre-build design. Superseded in part by the delivered system — see the note below. |
+
+
+> **Status: this is the Phase 1 design document, written before the build.** It is kept
+> as submitted, because the research record needs the design that was proposed, not a
+> retrospective tidy-up of it. Where the delivered system differs, the difference is a
+> recorded decision rather than drift, and the differences are listed in
+> [`../Folder_Structure.md`](../Folder_Structure.md). The largest are: the presentation
+> layer is React and FastAPI rather than Streamlit; the chart layer is hand-written SVG
+> rather than a charting library; no generative language model or chat assistant was
+> built; the LSTM was dropped under §9.5; and segmentation, association and the insight
+> layer run as research pipelines rather than behind API endpoints.
+>
+> For what exists today, start at the [repository README](../README.md).
 
 **How to read this document.** Section 0 lists problems I found when I checked your Assessment 1 plan against the real dataset. Read it first, because several of them change the design. Sections 1–19 follow the order you asked for. Appendix B lists the decisions I need you to confirm before building starts.
 
