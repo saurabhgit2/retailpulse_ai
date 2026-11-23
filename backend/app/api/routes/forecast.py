@@ -5,6 +5,7 @@
     GET  /datasets/{id}/forecast/runs          recent runs, newest first
     GET  /datasets/{id}/forecast/runs/{run_id} the full result
     GET  /datasets/{id}/forecast/latest        the newest ready run, for the dashboard
+    GET  /datasets/{id}/forecast/outlook       the next weeks, from the best recent method
 
 The 202-and-poll shape is the same as dataset processing, and for the same
 reason: a ladder of models over several folds is not something to hold an HTTP
@@ -28,7 +29,7 @@ from app.api.deps import DbSession, OwnedDataset
 from app.core.errors import NotFound
 from app.db.repositories import forecasts as repo
 from app.schemas.forecast import ForecastRunAccepted, ForecastRunRequest
-from app.services import forecast_service
+from app.services import forecast_service, outlook_service
 from app.services.forecast_service import execute_run
 
 router = APIRouter(tags=["forecasting"])
@@ -104,6 +105,25 @@ def get_run(dataset: OwnedDataset, session: DbSession, run_id: uuid.UUID) -> dic
     """Also the polling endpoint: `status` is 'queued', 'running', 'ready' or 'failed'."""
     run = forecast_service.get_run_or_404(session, dataset, run_id)
     return forecast_service.run_detail(session, run)
+
+
+@router.get(
+    "/datasets/{dataset_id}/forecast/outlook",
+    summary="The next weeks' revenue, units and top products, from the best recent method",
+)
+def outlook(
+    dataset: OwnedDataset,
+    session: DbSession,
+    horizon: Annotated[int, Query(ge=4, le=outlook_service.MAX_HORIZON)] = 12,
+    products: Annotated[int, Query(ge=0, le=outlook_service.MAX_PRODUCTS)] = 20,
+) -> dict[str, Any]:
+    """A forecast past the last complete week, for planning rather than research.
+
+    Each candidate method is back-tested from several recent weeks and the one
+    with the smallest typical error is used. Computed on the first request and
+    then served from the analysis cache until the dataset changes.
+    """
+    return outlook_service.get_outlook(session, dataset, horizon=horizon, products=products)
 
 
 @router.get(

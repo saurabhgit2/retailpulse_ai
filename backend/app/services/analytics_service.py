@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 CACHED_ANALYSES = frozenset(
     {"statistics", "features", "series_profile", "seasonality", "relationships",
-     "distributions", "anomalies", "rfm", "baskets"}
+     "distributions", "anomalies", "rfm", "baskets", "forecast_outlook"}
 )
 
 # How many SKUs the per-series analyses look at. The long tail of a retail

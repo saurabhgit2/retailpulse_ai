@@ -1,0 +1,726 @@
+{
+ "available": true,
+ "version": "outlook-2",
+ "horizon": 12,
+ "series": {
+  "first_period": "2010-01-04",
+  "last_period": "2012-01-02",
+  "periods": 105,
+  "closed_weeks": [],
+  "incomplete_final_dropped": 1
+ },
+ "measures": {
+  "net_revenue": {
+   "label": "Net revenue",
+   "available": true,
+   "model": {
+    "name": "seasonal_naive",
+    "label": "Same week last year",
+    "explanation": "Repeats the figure from the same week one year earlier, unchanged.",
+    "seasonal": true
+   },
+   "accuracy": {
+    "wape": 0.406107027193749,
+    "confidence": "high",
+    "backtests": 8,
+    "horizon": 12,
+    "step": 4
+   },
+   "history": {
+    "periods": [
+     "2011-10-17",
+     "2011-10-24",
+     "2011-10-31",
+     "2011-11-07",
+     "2011-11-14",
+     "2011-11-21",
+     "2011-11-28",
+     "2011-12-05",
+     "2011-12-12",
+     "2011-12-19",
+     "2011-12-26",
+     "2012-01-02"
+    ],
+    "values": [
+     156.0,
+     156.0,
+     156.0,
+     156.0,
+     159.0,
+     174.0,
+     174.0,
+     190.0,
+     218.0,
+     228.0,
+     228.0,
+     228.0
+    ]
+   },
+   "forecast": {
+    "periods": [
+     "2012-01-09",
+     "2012-01-16",
+     "2012-01-23",
+     "2012-01-30",
+     "2012-02-06",
+     "2012-02-13",
+     "2012-02-20",
+     "2012-02-27",
+     "2012-03-05",
+     "2012-03-12",
+     "2012-03-19",
+     "2012-03-26"
+    ],
+    "point": [
+     228.0,
+     228.0,
+     248.0,
+     274.0,
+     282.0,
+     285.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "lower": [
+     228.0,
+     228.0,
+     248.0,
+     274.0,
+     282.0,
+     285.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0,
+     300.0
+    ],
+    "upper": [
+     231.53,
+     231.53,
+     251.84,
+     278.25,
+     286.37,
+     289.42,
+     304.65,
+     304.65,
+     304.65,
+     304.65,
+     304.65,
+     304.65
+    ],
+    "likely_closed": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    "level": 0.8
+   },
+   "recent_check": {
+    "periods": [
+     "2011-10-17",
+     "2011-10-24",
+     "2011-10-31",
+     "2011-11-07",
+     "2011-11-14",
+     "2011-11-21",
+     "2011-11-28",
+     "2011-12-05",
+     "2011-12-12",
+     "2011-12-19",
+     "2011-12-26",
+     "2012-01-02"
+    ],
+    "actual": [
+     156.0,
+     156.0,
+     156.0,
+     156.0,
+     159.0,
+     174.0,
+     174.0,
+     190.0,
+     218.0,
+     228.0,
+     228.0,
+     228.0
+    ],
+    "forecast": [
+     156.0,
+     156.0,
+     156.0,
+     156.0,
+     162.0,
+     174.0,
+     174.0,
+     194.0,
+     223.0,
+     228.0,
+     228.0,
+     228.0
+    ],
+    "wape": 0.5398110661268556
+   },
+   "totals": {
+    "next_4": 978.0,
+    "next_horizon": 3345.0,
+    "same_weeks_last_year": 3345.0,
+    "change_vs_last_year": 0.0,
+    "last_horizon": 2223.0
+   },
+   "candidates": [
+    {
+     "name": "seasonal_naive",
+     "label": "Same week last year",
+     "wape": 0.406107027193749,
+     "backtests": 8,
+     "chosen": true,
+     "flat": false
+    },
+    {
+     "name": "seasonal_growth",
+     "label": "Last year, adjusted for growth",
+     "wape": 0.6949794743985375,
+     "backtests": 8,
+     "chosen": false,
+     "flat": false
+    },
+    {
+     "name": "seasonal_blend",
+     "label": "Blend of the two seasonal methods",
+     "wape": 1.8189889124867624,
+     "backtests": 8,
+     "chosen": false,
+     "flat": false
+    },
+    {
+     "name": "trend_season",
+     "label": "Trend and yearly pattern",
+     "wape": 3.5233019074089755,
+     "backtests": 8,
+     "chosen": false,
+     "flat": false
+    },
+    {
+     "name": "level_season",
+     "label": "Recent level with a softened yearly pattern",
+     "wape": 13.030939602715604,
+     "backtests": 8,
+     "chosen": false,
+     "flat": false
+    },
+    {
+     "name": "recent_level",
+     "label": "Recent level (exponential smoothing)",
+     "wape": 16.891058064590222,
+     "backtests": 8,
+     "chosen": false,
+     "flat": true
+    },
+    {
+     "name": "recent_average",
+     "label": "Average of the last 12 weeks",
+     "wape": 27.395089017974954,
+     "backtests": 8,
+     "chosen": false,
+     "flat": true
+    }
+   ],
+   "closures_filled": 0
+  },
+  "net_units": {
+   "label": "Units sold (net of returns)",
+   "available": true,
+   "model": {
+    "name": "seasonal_naive",
+    "label": "Same week last year",
+    "explanation": "Repeats the figure from the same week one year earlier, unchanged.",
+    "seasonal": true
+   },
+   "accuracy": {
+    "wape": 0.41421408327883147,
+    "confidence": "high",
+    "backtests": 8,
+    "horizon": 12,
+    "step": 4
+   },
+   "history": {
+    "periods": [
+     "2011-10-17",
+     "2011-10-24",
+     "2011-10-31",
+     "2011-11-07",
+     "2011-11-14",
+     "2011-11-21",
+     "2011-11-28",
+     "2011-12-05",
+     "2011-12-12",
+     "2011-12-19",
+     "2011-12-26",
+     "2012-01-02"
+    ],
+    "values": [
+     36.0,
+     36.0,
+     36.0,
+     36.0,
+     37.0,
+     42.0,
+     42.0,
+     46.0,
+     52.0,
+     54.0,
+     54.0,
+     54.0
+    ]
+   },
+   "forecast": {
+    "periods": [
+     "2012-01-09",
+     "2012-01-16",
+     "2012-01-23",
+     "2012-01-30",
+     "2012-02-06",
+     "2012-02-13",
+     "2012-02-20",
+     "2012-02-27",
+     "2012-03-05",
+     "2012-03-12",
+     "2012-03-19",
+     "2012-03-26"
+    ],
+    "point": [
+     54.0,
+     54.0,
+     58.0,
+     64.0,
+     66.0,
+     67.0,
+     72.0,
+     72.0,
+     72.0,
+     72.0,
+     72.0,
+     72.0
+    ],
+    "lower": [
+     54.0,
+     54.0,
+     58.0,
+     64.0,
+     66.0,
+     67.0,
+     72.0,
+     72.0,
+     72.0,
+     72.0,
+     72.0,
+     72.0
+    ],
+    "upper": [
+     54.9,
+     54.9,
+     58.97,
+     65.07,
+     67.1,
+     68.12,
+     73.2,
+     73.2,
+     73.2,
+     73.2,
+     73.2,
+     73.2
+    ],
+    "likely_closed": [
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false,
+     false
+    ],
+    "level": 0.8
+   },
+   "recent_check": {
+    "periods": [
+     "2011-10-17",
+     "2011-10-24",
+     "2011-10-31",
+     "2011-11-07",
+     "2011-11-14",
+     "2011-11-21",
+     "2011-11-28",
+     "2011-12-05",
+     "2011-12-12",
+     "2011-12-19",
+     "2011-12-26",
+     "2012-01-02"
+    ],
+    "actual": [
+     36.0,
+     36.0,
+     36.0,
+     36.0,
+     37.0,
+     42.0,
+     42.0,
+     46.0,
+     52.0,
+     54.0,
+     54.0,
+     54.0
+    ],
+    "forecast": [
+     36.0,
+     36.0,
+     36.0,
+     36.0,
+     38.0,
+     42.0,
+     42.0,
+     47.0,
+     53.0,
+     54.0,
+     54.0,
+     54.0
+    ],
+    "wape": 0.5714285714285714
+   },
+   "totals": {
+    "next_4": 230.0,
+    "next_horizon": 795.0,
+    "same_weeks_last_year": 795.0,
+    "change_vs_last_year": 0.0,
+    "last_horizon": 525.0
+   },
+   "candidates": [
+    {
+     "name": "seasonal_naive",
+     "label": "Same week last year",
+     "wape": 0.41421408327883147,
+     "backtests": 8,
+     "chosen": true,
+     "flat": false
+    },
+    {
+     "name": "seasonal_growth",
+     "label": "Last year, adjusted for growth",
+     "wape": 0.6590523834792312,
+     "backtests": 8,
+     "chosen": false,
+     "flat": false
+    },
+    {
+     "name": "seasonal_blend",
+     "label": "Blend of the two seasonal methods",
+     "wape": 1.9488943855037784,
+     "backtests": 8,
+     "chosen": false,
+     "flat": false
+    },
+    {
+     "name": "trend_season",
+     "label": "Trend and yearly pattern",
+     "wape": 3.7876526480195483,
+     "backtests": 8,
+     "chosen": false,
+     "flat": false
+    },
+    {
+     "name": "level_season",
+     "label": "Recent level with a softened yearly pattern",
+     "wape": 13.687048602889655,
+     "backtests": 8,
+     "chosen": false,
+     "flat": false
+    },
+    {
+     "name": "recent_level",
+     "label": "Recent level (exponential smoothing)",
+     "wape": 18.046823022504675,
+     "backtests": 8,
+     "chosen": false,
+     "flat": true
+    },
+    {
+     "name": "recent_average",
+     "label": "Average of the last 12 weeks",
+     "wape": 28.816946442845726,
+     "backtests": 8,
+     "chosen": false,
+     "flat": true
+    }
+   ],
+   "closures_filled": 0
+  }
+ },
+ "products": {
+  "available": true,
+  "limit": 3,
+  "rows": [
+   {
+    "product_code": "SYN-003",
+    "description": "SYNTHETIC ITEM 3",
+    "model": {
+     "name": "seasonal_growth",
+     "label": "Last year, adjusted for growth",
+     "explanation": "Takes each week's figure from the same week last year and scales it by how much the most recent quarter grew compared with the same quarter a year earlier.",
+     "seasonal": true
+    },
+    "accuracy": {
+     "wape": 0.7253337310133522,
+     "confidence": "high",
+     "backtests": 6,
+     "horizon": 12,
+     "step": 3
+    },
+    "weeks_of_history": 105,
+    "spikes_capped": 0,
+    "last_horizon_units": 238.0,
+    "next_4_units": 105.58754863813229,
+    "next_horizon_units": 344.6536964980545,
+    "same_weeks_last_year": 346.0,
+    "change_vs_last_year": -0.38910505836574627,
+    "change_vs_recent": 44.812477520190974,
+    "history": {
+     "periods": [
+      "2011-11-14",
+      "2011-11-21",
+      "2011-11-28",
+      "2011-12-05",
+      "2011-12-12",
+      "2011-12-19",
+      "2011-12-26",
+      "2012-01-02"
+     ],
+     "values": [
+      18.0,
+      18.0,
+      18.0,
+      18.0,
+      22.0,
+      24.0,
+      24.0,
+      24.0
+     ]
+    },
+    "forecast": {
+     "periods": [
+      "2012-01-09",
+      "2012-01-16",
+      "2012-01-23",
+      "2012-01-30",
+      "2012-02-06",
+      "2012-02-13",
+      "2012-02-20",
+      "2012-02-27",
+      "2012-03-05",
+      "2012-03-12",
+      "2012-03-19",
+      "2012-03-26"
+     ],
+     "point": [
+      23.91,
+      23.91,
+      27.89,
+      29.88,
+      29.88,
+      29.88,
+      29.88,
+      29.88,
+      29.88,
+      29.88,
+      29.88,
+      29.88
+     ],
+     "lower": [
+      23.74,
+      23.74,
+      27.7,
+      29.67,
+      29.67,
+      29.67,
+      29.67,
+      29.67,
+      29.67,
+      29.67,
+      29.67,
+      29.67
+     ],
+     "upper": [
+      23.91,
+      23.91,
+      27.89,
+      29.88,
+      29.88,
+      29.88,
+      29.88,
+      29.88,
+      29.88,
+      29.88,
+      29.88,
+      29.88
+     ],
+     "likely_closed": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "level": 0.8
+    }
+   },
+   {
+    "product_code": "SYN-002",
+    "description": "SYNTHETIC ITEM 2",
+    "model": {
+     "name": "seasonal_growth",
+     "label": "Last year, adjusted for growth",
+     "explanation": "Takes each week's figure from the same week last year and scales it by how much the most recent quarter grew compared with the same quarter a year earlier.",
+     "seasonal": true
+    },
+    "accuracy": {
+     "wape": 1.0002740784434976,
+     "confidence": "high",
+     "backtests": 6,
+     "horizon": 12,
+     "step": 3
+    },
+    "weeks_of_history": 105,
+    "spikes_capped": 0,
+    "last_horizon_units": 172.0,
+    "next_4_units": 75.5891891891892,
+    "next_horizon_units": 266.5513513513514,
+    "same_weeks_last_year": 268.0,
+    "change_vs_last_year": -0.5405405405405239,
+    "change_vs_recent": 54.97171590194849,
+    "history": {
+     "periods": [
+      "2011-11-14",
+      "2011-11-21",
+      "2011-11-28",
+      "2011-12-05",
+      "2011-12-12",
+      "2011-12-19",
+      "2011-12-26",
+      "2012-01-02"
+     ],
+     "values": [
+      12.0,
+      12.0,
+      12.0,
+      16.0,
+      18.0,
+      18.0,
+      18.0,
+      18.0
+     ]
+    },
+    "forecast": {
+     "periods": [
+      "2012-01-09",
+      "2012-01-16",
+      "2012-01-23",
+      "2012-01-30",
+      "2012-02-06",
+      "2012-02-13",
+      "2012-02-20",
+      "2012-02-27",
+      "2012-03-05",
+      "2012-03-12",
+      "2012-03-19",
+      "2012-03-26"
+     ],
+     "point": [
+      17.9,
+      17.9,
+      17.9,
+      21.88,
+      23.87,
+      23.87,
+      23.87,
+      23.87,
+      23.87,
+      23.87,
+      23.87,
+      23.87
+     ],
+     "lower": [
+      17.73,
+      17.73,
+      17.73,
+      21.67,
+      23.64,
+      23.64,
+      23.64,
+      23.64,
+      23.64,
+      23.64,
+      23.64,
+      23.64
+     ],
+     "upper": [
+      17.9,
+      17.9,
+      17.9,
+      21.88,
+      23.87,
+      23.87,
+      23.87,
+      23.87,
+      23.87,
+      23.87,
+      23.87,
+      23.87
+     ],
+     "likely_closed": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+     ],
+     "level": 0.8
+    }
+   }
+  ],
+  "skipped": [],
+  "note": "The products with the highest revenue, forecast in units net of returns. Each product keeps the method that suited its own history best, starting from its first sale, with one-off bulk weeks capped before fitting. Single products swing far more than the business total, so expect wider bands and lower confidence."
+ },
+ "method_note": "Each method is back-tested from several recent weeks: it forecasts the following weeks using only the data before them, and its forecast is compared with what actually happened. The method with the smallest typical error is used. Weeks the business did not trade are filled from their neighbours before fitting and are not scored.",
+ "_fixture_note": "SYNTHETIC data: captured from GET /forecast/outlook on the test suite dataset, trimmed."
+}

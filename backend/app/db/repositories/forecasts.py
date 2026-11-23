@@ -23,17 +23,32 @@ import uuid
 from typing import Any
 
 import pandas as pd
-from sqlalchemy import select
+from sqlalchemy import and_, case, func, select
 from sqlalchemy.orm import Session
 
 from app.db.models.forecast import HOLDOUT_FOLD, ForecastModelResult, ForecastRun
+from app.db.models.sales import Product, SalesRecord
 from app.db.repositories import analytics as analytics_repo
 from app.db.repositories.analytics import Filters
 
 # Which column of the trend query is forecast. Net revenue by default: returns
 # are real events that reduce what the business actually took, and a forecast
 # of gross revenue overstates what a manager can plan against.
-VALUE_COLUMNS = ("net_revenue", "gross_revenue", "units", "orders")
+VALUE_COLUMNS = ("net_revenue", "gross_revenue", "units", "orders", "net_units")
+
+# Units sold minus units returned. A return is subtracted whatever sign the file
+# recorded it with. This is what nets out a bulk order that was cancelled the
+# same day: Online Retail II has single lines of tens of thousands of units that
+# were reversed within minutes, and `units` (sales only) keeps them in full.
+_NET_UNITS = func.coalesce(
+    func.sum(
+        case(
+            (SalesRecord.is_return.is_(True), -func.abs(SalesRecord.quantity)),
+            else_=SalesRecord.quantity,
+        )
+    ),
+    0,
+)
 
 # A period is complete only if the data runs to its end. The dataset's stored
 # `date_max` is what makes that decidable; see `_drop_incomplete_final`.
@@ -60,7 +75,10 @@ def weekly_series(
             f"Unknown value column '{value_column}'. Choose one of {list(VALUE_COLUMNS)}."
         )
 
-    frame = analytics_repo.trend(session, dataset_id, filters, granularity)
+    if value_column == "net_units":
+        frame = _net_units_trend(session, dataset_id, filters, granularity)
+    else:
+        frame = analytics_repo.trend(session, dataset_id, filters, granularity)
     if frame.empty:
         return pd.Series(dtype="float64"), {
             "available": False,
@@ -179,6 +197,84 @@ def product_panel(
         ),
     }
     return panel, meta
+
+
+def _net_units_trend(
+    session: Session, dataset_id: uuid.UUID, filters: Filters, granularity: str
+) -> pd.DataFrame:
+    """Net units per period, bucketed exactly as `analytics_repo.trend` buckets."""
+    bucket = func.date_trunc(
+        analytics_repo.GRANULARITY_SQL[granularity], SalesRecord.occurred_at
+    ).label("period")
+    statement = (
+        select(bucket, _NET_UNITS.label("net_units"))
+        .where(and_(*analytics_repo._conditions(dataset_id, filters)))
+        .group_by(bucket)
+        .order_by(bucket)
+    )
+    return analytics_repo._frame(session, statement)
+
+
+def top_product_units(
+    session: Session, dataset_id: uuid.UUID, *, limit: int
+) -> tuple[pd.DataFrame, list[str]]:
+    """Weekly net units for the top products by revenue, for the business outlook.
+
+    Returns a long frame (series_id, period, value) and the product codes in
+    descending order of revenue. Net of returns, so an order cancelled the
+    same week contributes nothing rather than a spike the seasonal methods
+    would copy into next year.
+    """
+    conditions = analytics_repo._conditions(dataset_id, Filters())
+    top = (
+        select(SalesRecord.product_id)
+        .where(and_(*conditions), SalesRecord.is_return.is_(False))
+        .group_by(SalesRecord.product_id)
+        .order_by(func.sum(SalesRecord.revenue).desc())
+        .limit(limit)
+    ).subquery()
+    bucket = func.date_trunc("week", SalesRecord.occurred_at).label("period")
+    statement = (
+        select(
+            Product.product_code.label("product_code"),
+            bucket,
+            _NET_UNITS.label("net_units"),
+            func.coalesce(
+                func.sum(case((SalesRecord.is_return.is_(False), SalesRecord.revenue), else_=0)),
+                0,
+            ).label("gross_revenue"),
+        )
+        .join(Product, SalesRecord.product_id == Product.id)
+        .where(and_(*conditions), SalesRecord.product_id.in_(select(top.c.product_id)))
+        .group_by(Product.product_code, bucket)
+    )
+    frame = analytics_repo._frame(session, statement)
+    if frame.empty:
+        return pd.DataFrame(columns=["series_id", "period", "value"]), []
+    ranked = (
+        frame.groupby("product_code")["gross_revenue"].sum()
+        .sort_values(ascending=False).index.astype(str).tolist()
+    )
+    long = pd.DataFrame({
+        "series_id": frame["product_code"].astype(str),
+        "period": pd.to_datetime(frame["period"]),
+        "value": pd.to_numeric(frame["net_units"], errors="coerce").fillna(0.0).astype("float64"),
+    })
+    return long, ranked
+
+
+def product_names(
+    session: Session, dataset_id: uuid.UUID, codes: list[str]
+) -> dict[str, str]:
+    """Product code to its stored description, for labelling forecast rows."""
+    if not codes:
+        return {}
+    rows = session.execute(
+        select(Product.product_code, Product.name).where(
+            Product.dataset_id == dataset_id, Product.product_code.in_(codes)
+        )
+    ).all()
+    return {str(code): name for code, name in rows if name}
 
 
 def _frequency(granularity: str) -> str:

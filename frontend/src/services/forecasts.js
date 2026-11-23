@@ -55,6 +55,15 @@ export function getLatest(datasetId, { query, signal } = {}) {
   return api.get(`${base(datasetId)}/forecast/latest`, { query, signal });
 }
 
+/**
+ * The business outlook: revenue, units and top products for the weeks after
+ * the data ends, from whichever method has been most accurate recently.
+ * Computed on the first request and cached on the server after that.
+ */
+export function getOutlook(datasetId, { query, signal } = {}) {
+  return api.get(`${base(datasetId)}/forecast/outlook`, { query, signal });
+}
+
 /** A run is finished, either way, when it stops being queued or running. */
 export function isFinished(run) {
   return run?.status === 'ready' || run?.status === 'failed';
